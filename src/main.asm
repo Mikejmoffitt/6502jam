@@ -2,42 +2,37 @@
 .include "cool_macros.asm"
 .include "zeropage.asm"
 
-.segment "VECTORS"
-
-	.addr	nmi_vector
-	.addr	reset_vector
-	.addr	irq_vector
-
 .segment "CODE"
 
-.macro ppu_disable
-	lda #$00			; 
-	sta PPUMASK			; Disable rendering
-	sta PPUCTRL			; Disable NMI
-.endmacro
-
-.macro ppu_enable
-	ldx ppu_normal_state
-	stx PPUMASK			; Put back PPU rendering state to what it was before
-	lda #$C0	
-	sta PPUCTRL			; Re-enable NMI
-.endmacro
-
+; ============================ 
+;           NMI ISR
+; ============================
 nmi_vector:
-irq_vector:
-	ppu_disable			; Disable rendering and NMI
+	pha
+	php
+
+	lda #$00
+	sta PPUCTRL			; Disable NMI
+	sta vblank_flag
 
 	lda #$80			; Bit 7, VBlank activity flag
 @vbl_done:
 	bit PPUSTATUS		; Check if vblank has finished
 	bne @vbl_done		; Repeat until vblank is over
+	
+	lda #%10011011
+	sta PPUCTRL			; Re-enable NMI
 
-	jsr goofy_cycle		; Run stupid palette cycle thing
 
-	ppu_enable			; Enable rendering and NMI
+	plp
+	pla
+	
+	rti
 
-	lda #$00
-	sta vblank_waiting	; Clear waiting flag
+; ============================ 
+;           IRQ ISR
+; ============================
+irq_vector:
 	rti
 
 ; ============================ 
@@ -52,7 +47,7 @@ reset_vector:
 	ldx #$ff
 	txs					; Set up stack
 	
-	inx					; X = 0
+	inx					; X = 0 now
 	stx PPUCTRL			; Disable NMI
 	stx PPUMASK			; Disable rendering
 	stx DMCFREQ			; Disable DMC IRQs
@@ -83,31 +78,105 @@ reset_vector:
 	bit PPUSTATUS
 	bne @waitvbl2
 
-; Okay, set up the PPU for real
-	ldx #$80
+; PPU configuration for actual use
+	ldx #%10011011
 	stx PPUCTRL
 
-	ldx #$1e
+	ldx #%00011110
 	stx ppu_normal_state
 	stx PPUMASK
 
 	ppu_enable
 
+
+	jmp main_entry		; GOTO main loop
+
 ; ============================ 
 ;          Main loop
 ; ============================
 
-main_loop:
+test_pal:
+	.byt $22, $37, $20, $0F
+	.byt $05, $06, $07, $08
+	.byt $08, $09, $0a, $0b
+	.byt $0c, $0d, $21, $16
+
+main_entry:
 	jsr wait_nmi
+	lda #$20
+	jsr nametable_load
+	lda #$28
+	jsr nametable_load
 
-	jmp main_loop
+	ppu_load_bg_palette test_pal
 
+@toploop:
+
+	jsr wait_nmi
+	ppu_disable
+
+	; jsr palcycle_test		; Run stupid palette cycle thing
+
+	ppu_load_scroll #$00, #$EF
+	ppu_enable
+
+	jmp @toploop
+
+; ============================
+;  Write some shit to nametable
+;  High byte specified in A
+; ============================
+
+helloworld_table:
+.incbin "assets/blank.nam"
+
+nametable_load:
+	ldx #$00
+	tay
+
+@copy_loop:
+
+	lda helloworld_table, x 	; Pull tile X from table
+	bit PPUSTATUS
+	sty PPUADDR		 	; High byte of $2000
+	stx PPUADDR			; Low byte of $2000 ( offset by x )
+	sta PPUDATA			; Write the data from the table
+	iny 
+
+	lda helloworld_table + $100, x
+	bit PPUSTATUS
+	sty PPUADDR
+	stx PPUADDR
+	sta PPUDATA
+	iny 
+
+	lda helloworld_table + $200, x
+	bit PPUSTATUS
+	sty PPUADDR
+	stx PPUADDR
+	sta PPUDATA
+
+	iny 
+	lda helloworld_table + $300, x
+	bit PPUSTATUS
+	sty PPUADDR
+	stx PPUADDR
+	sta PPUDATA
+
+	dey
+	dey
+	dey
+
+	inx
+	cpx #$00
+	bne @copy_loop
+	rts
 
 ; ============================ 
 ;     Goofy palette cycle
 ; ============================
 
-goofy_cycle:
+palcycle_test:
 ; Set write address to backdrop palette
 	ppu_load_addr #$3f, #$00
 
@@ -118,11 +187,18 @@ goofy_cycle:
 	stx pal_val
 	rts
 
-.include "utils.asm"
 
+.include "utils.asm"	; Pull in NMI support code
 
 .segment "CHR"
 .incbin "assets/mario.chr"
 
 ;.segment "SAVE"
 ;	.res 1
+
+.segment "VECTORS"
+
+	.addr	nmi_vector
+	.addr	reset_vector
+	.addr	irq_vector
+
