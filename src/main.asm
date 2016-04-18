@@ -103,12 +103,14 @@ test_pal:
 
 main_entry:
 	jsr wait_nmi
+	ppu_disable
 	lda #$20
 	jsr nametable_load
 	lda #$28
 	jsr nametable_load
 
 	ppu_load_bg_palette test_pal
+	ppu_enable
 
 @toploop:
 
