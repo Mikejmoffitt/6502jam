@@ -100,6 +100,10 @@ test_pal:
 	.byt $05, $06, $07, $08
 	.byt $08, $09, $0a, $0b
 	.byt $0c, $0d, $21, $16
+	.byt $22, $31, $32, $33
+	.byt $22, $37, $3a, $3d
+	.byt $22, $38, $3b, $3e
+	.byt $22, $39, $3c, $3f
 
 main_entry:
 	jsr wait_nmi
@@ -109,7 +113,9 @@ main_entry:
 	lda #$28
 	jsr nametable_load
 
-	ppu_load_bg_palette test_pal
+	ppu_load_full_palette test_pal
+;	ppu_load_bg_palette test_pal
+;	ppu_load_spr_palette test_pal
 	ppu_enable
 
 @toploop:

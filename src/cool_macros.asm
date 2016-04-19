@@ -44,6 +44,18 @@ DMCFREQ     = $4010
 	sta PPUSCROLL
 .endmacro
 
+; Load a full palette
+.macro ppu_load_full_palette pal_data
+	ppu_load_addr #$3f, #$00
+	ldx #$00
+:
+	lda pal_data, x
+	sta PPUDATA
+	inx
+	cpx #$20
+	bne :-
+.endmacro
+
 ; Load a full BG palette
 .macro ppu_load_bg_palette pal_data
 	ppu_load_addr #$3f, #$00
