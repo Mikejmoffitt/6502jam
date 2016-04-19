@@ -21,7 +21,7 @@ DMCFREQ     = $4010
 .macro ppu_enable
 	lda ppu_normal_state
 	sta PPUMASK			; Put back PPU rendering state to what it was before
-	lda #%10011000
+	lda #%10010000
 	sta PPUCTRL			; Re-enable NMI
 .endmacro
 
@@ -92,4 +92,10 @@ DMCFREQ     = $4010
 	lda	addr+1
 	adc	#$00
 	sta	addr+1
+.endmacro
+
+; Run an OAM DMA
+.macro spr_dma
+	lda #$02
+	sta OAMDMA
 .endmacro

@@ -2,6 +2,8 @@
 .include "cool_macros.asm"
 .include "zeropage.asm"
 
+OAM_BASE = $200
+
 .segment "CODE"
 
 ; ============================ 
@@ -96,11 +98,11 @@ reset_vector:
 ; ============================
 
 test_pal:
-	.byt $22, $37, $20, $0F
-	.byt $05, $06, $07, $08
-	.byt $08, $09, $0a, $0b
-	.byt $0c, $0d, $21, $16
-	.byt $22, $31, $32, $33
+	.byt $22, $2A, $20, $0F
+	.byt $22, $06, $07, $08
+	.byt $22, $09, $0a, $0b
+	.byt $22, $0d, $21, $16
+	.byt $22, $16, $36, $12
 	.byt $22, $37, $3a, $3d
 	.byt $22, $38, $3b, $3e
 	.byt $22, $39, $3c, $3f
@@ -117,6 +119,17 @@ main_entry:
 ;	ppu_load_bg_palette test_pal
 ;	ppu_load_spr_palette test_pal
 	ppu_enable
+	jsr wait_nmi
+	ppu_disable
+
+	jsr spr_init
+
+	jsr sprite_test
+
+	spr_dma
+
+
+	ppu_enable
 
 @toploop:
 
@@ -124,7 +137,6 @@ main_entry:
 	ppu_disable
 
 	; jsr palcycle_test		; Run stupid palette cycle thing
-
 	ppu_load_scroll #$00, #$EF
 	ppu_enable
 
@@ -180,6 +192,53 @@ nametable_load:
 	bne @copy_loop
 	rts
 
+; ============================
+;      Place some sprites
+; ============================
+sprite_test:
+	; Top-left of head
+	ldx #$60 ; Y
+	stx OAM_BASE
+	ldx #$32 ; Tile
+	stx OAM_BASE + 1
+	ldx #%00000000
+	stx OAM_BASE + 2
+	ldx #$40 ; X
+	stx OAM_BASE + 3
+
+	; Top-right
+	ldx #$60
+	stx OAM_BASE + 4 ; Y
+	ldx #$41
+	stx OAM_BASE + 5 ; Tile
+	ldx #%00000000
+	stx OAM_BASE + 6
+	ldx #$48
+	stx OAM_BASE + 7 ; X
+
+	; Bottom-left of head
+	ldx #$68
+	stx OAM_BASE + 8; Y
+	ldx #$42
+	stx OAM_BASE + 9 ; Tile
+	ldx #%00000000
+	stx OAM_BASE + 10
+	ldx #$40
+	stx OAM_BASE + 11 ; X
+
+	; Bottom-right
+	ldx #$68
+	stx OAM_BASE + 12; Y
+	ldx #$43
+	stx OAM_BASE + 13 ; Tile
+	ldx #%00000000
+	stx OAM_BASE + 14
+	ldx #$48
+	stx OAM_BASE + 15 ; X
+
+
+	rts
+
 ; ============================ 
 ;     Goofy palette cycle
 ; ============================
@@ -197,6 +256,7 @@ palcycle_test:
 
 
 .include "utils.asm"	; Pull in NMI support code
+.include "sprites.asm"
 
 .segment "CHR"
 .incbin "assets/mario.chr"
