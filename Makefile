@@ -12,7 +12,7 @@ TOPLEVEL := main.asm
 
 EXECUTABLE := jam.nes
 
-.PHONY: all
+.PHONY: all build $(EXECUTABLE)
 
 build: $(EXECUTABLE)
 
