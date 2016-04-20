@@ -34,8 +34,11 @@ ppuctrl_config:                         .res 1
 ;           NMI ISR
 ; ============================
 nmi_vector:
+        pha                             ; Preseve registers on stack
+        txa
         pha
-        php
+        tya
+        pha
 
         lda #$00
         sta PPUCTRL                     ; Disable NMI
@@ -49,7 +52,10 @@ nmi_vector:
         lda #%10011011
         sta PPUCTRL                     ; Re-enable NMI
 
-        plp
+        pla                             ; Restore registers from stack
+        tay
+        pla
+        tax
         pla
         
         rti
@@ -135,7 +141,7 @@ test_pal:
         .byt $22, $39, $3c, $3f
 
 test_table:
-.incbin "assets/blank.nam"
+.incbin "assets/test.nam"
 
 ; ============================ 
 ;          Main loop
