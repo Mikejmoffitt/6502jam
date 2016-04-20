@@ -80,16 +80,57 @@ BUTTON_RIGHT    = %10000000
 .macro ppu_write_data data
         lda data
         sta PPUDATA
-
-.macro inc16 addr
-        clc
-        lda        addr
-        adc #$01
-        sta        addr
-        lda        addr+1
-        adc        #$00
-        sta        addr+1
 .endmacro
+
+; Add a 16-bit memory value
+.macro sum16 addr, val
+        clc
+
+; First deal with greater magnitude
+        lda addr+1
+        bmi :+
+        add16 addr, val
+
+        clc
+        lda addr+1
+        adc val+1
+        sta addr+1
+        
+        lda #$00
+        beq :++
+
+
+: ; Negative sum
+        sub16 addr, val
+        
+        sec
+        lda addr+1
+        sbc val+1
+        sta addr+1
+:
+
+.endmacro
+
+.macro add16 addr, amt
+        clc
+        lda addr
+        adc amt
+        sta addr
+        lda addr+1
+        adc #$00
+        sta addr+1
+.endmacro
+
+.macro sub16 addr, amt
+        sec
+        lda addr
+        sbc amt
+        sta addr
+        lda addr+1
+        sbc #$00
+        sta addr+1
+.endmacro
+
 
 ; Run an OAM DMA
 .macro spr_dma

@@ -28,9 +28,13 @@ button_table:
         pad_2:                                  .res 1
         pad_2_prev:                             .res 1
 
-        mario_x:                                .res 1
-        mario_y:                                .res 1
         mario_dir:                              .res 1
+
+        mario_x:                                .res 2
+        mario_y:                                .res 2
+        mario_dx:                               .res 2
+        mario_dy:                               .res 2
+        mario_speed:                            .res 1
 
 .segment "CODE"
 
@@ -195,39 +199,54 @@ scroll_right:
 ; ============================
 
 move_mario:
+
+        lda pad_1
+        bit btn_a
+        beq @noa
+        ldx mario_speed
+        inx
+        stx mario_speed
+@noa:
+
+        lda pad_1
+        bit btn_b
+        beq @nob
+        ldx mario_speed
+        dex
+        stx mario_speed
+@nob:
+
         lda pad_1 
-        bit btn_up                      ; Left
-        beq :+
-        ldx mario_y
-        dex
-        dex
-        stx mario_y
-:
-        bit btn_down                    ; Left
-        beq :+
-        ldx mario_y
-        inx
-        inx
-        stx mario_y
-:
+        bit btn_up                      ; Up
+        beq @noup
+        sub16 mario_dy, #$08
+
+@noup:
+        lda pad_1 
+        bit btn_down                    ; Down
+        beq @nodown
+        add16 mario_dy, #$08
+
+@nodown:
+        lda pad_1 
         bit btn_left                    ; Left
-        beq :+
-        ldx mario_x
-        dex
-        dex
-        lda #$01
-        sta mario_dir
-        stx mario_x
-:
+        beq @noleft
+        sub16 mario_dx, #$08
+
+@noleft:
+        lda pad_1 
         bit btn_right                   ; Right
-        beq :+
-        ldx mario_x
-        inx
-        inx
-        lda #$00
-        sta mario_dir
-        stx mario_x
-:
+        beq @noright
+        add16 mario_dx, #$08
+        
+
+@noright:
+
+        ;add16 mario_x, mario_dx
+        sum16 mario_x, mario_dx
+        sum16 mario_y, mario_dy
+
+
         rts
 
 ; ============================ 
@@ -257,9 +276,10 @@ main_entry:
 
 @toploop:
 ; Logic Updates
+        jsr read_joy_safe_1
         jsr scroll_right
         jsr move_mario
-        jsr read_joy_safe_1
+
         jsr draw_mario
 
 ; Graphics updates
@@ -276,7 +296,7 @@ main_entry:
 ; ============================
 draw_mario:
         clc
-        lda mario_y
+        lda mario_y+1
         sta OAM_BASE
         sta OAM_BASE + 4 ; Y
         adc #$08
@@ -292,7 +312,7 @@ draw_mario:
         sta OAM_BASE + 14
 
         clc
-        lda mario_x
+        lda mario_x+1
         sta OAM_BASE + 3
         sta OAM_BASE + 11 ; X
         adc #$08
