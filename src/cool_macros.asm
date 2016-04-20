@@ -82,33 +82,15 @@ BUTTON_RIGHT    = %10000000
         sta PPUDATA
 .endmacro
 
-; Add a 16-bit memory value
+; Add a 16-bit memory value to addr
 .macro sum16 addr, val
         clc
-
-; First deal with greater magnitude
-        lda addr+1
-        bmi :+
-        add16 addr, val
-
-        clc
+        lda addr
+        adc val
+        sta addr
         lda addr+1
         adc val+1
         sta addr+1
-        
-        lda #$00
-        beq :++
-
-
-: ; Negative sum
-        sub16 addr, val
-        
-        sec
-        lda addr+1
-        sbc val+1
-        sta addr+1
-:
-
 .endmacro
 
 .macro add16 addr, amt

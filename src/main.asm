@@ -34,7 +34,7 @@ button_table:
         mario_y:                                .res 2
         mario_dx:                               .res 2
         mario_dy:                               .res 2
-        mario_speed:                            .res 1
+        mario_speed:                            .res 2
 
 .segment "CODE"
 
@@ -203,46 +203,52 @@ move_mario:
         lda pad_1
         bit btn_a
         beq @noa
-        ldx mario_speed
-        inx
-        stx mario_speed
+        add16 mario_speed, #$01
 @noa:
 
         lda pad_1
         bit btn_b
         beq @nob
-        ldx mario_speed
-        dex
-        stx mario_speed
+        sub16 mario_speed, #$01
 @nob:
+
+        lda pad_1
+        bit btn_start
+        beq @nostart
+        lda #$00
+        sta mario_dy
+        sta mario_dy+1
+        sta mario_dx
+        sta mario_dx+1
+
+@nostart:
 
         lda pad_1 
         bit btn_up                      ; Up
         beq @noup
-        sub16 mario_dy, #$08
+        sub16 mario_dy, mario_speed
 
 @noup:
         lda pad_1 
         bit btn_down                    ; Down
         beq @nodown
-        add16 mario_dy, #$08
+        add16 mario_dy, mario_speed
 
 @nodown:
         lda pad_1 
         bit btn_left                    ; Left
         beq @noleft
-        sub16 mario_dx, #$08
+        sub16 mario_dx, mario_speed
 
 @noleft:
         lda pad_1 
         bit btn_right                   ; Right
         beq @noright
-        add16 mario_dx, #$08
-        
+        add16 mario_dx, mario_speed        
 
 @noright:
 
-        ;add16 mario_x, mario_dx
+        ; Apply X and Y vectors to Mario
         sum16 mario_x, mario_dx
         sum16 mario_y, mario_dy
 
@@ -271,6 +277,9 @@ main_entry:
 
         lda #$00
         sta yscroll
+
+        lda #$04
+        sta mario_speed
 
         ppu_enable
 
