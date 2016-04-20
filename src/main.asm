@@ -5,11 +5,32 @@
 OAM_BASE = $200
 
 .segment "BSS"
-xscroll:                                .res 1
-xscroll_coarse:                         .res 1
-yscroll:                                .res 1
-yscroll_coarse:                         .res 1
-ppuctrl_config:                         .res 1
+
+; Button comparison table
+button_table:
+        btn_a:                                  .res 1
+        btn_b:                                  .res 1
+        btn_sel:                                .res 1
+        btn_start:                              .res 1
+        btn_up:                                 .res 1
+        btn_down:                               .res 1
+        btn_left:                               .res 1
+        btn_right:                              .res 1
+
+        xscroll:                                .res 1
+        xscroll_coarse:                         .res 1
+        yscroll:                                .res 1
+        yscroll_coarse:                         .res 1
+        ppuctrl_config:                         .res 1
+
+        pad_1:                                  .res 1
+        pad_1_prev:                             .res 1
+        pad_2:                                  .res 1
+        pad_2_prev:                             .res 1
+
+        mario_x:                                .res 1
+        mario_y:                                .res 1
+        mario_dir:                              .res 1
 
 .segment "CODE"
 
@@ -103,6 +124,15 @@ reset_vector:
 
         inx
         bne @clrmem
+
+; Make controller comparison table
+        lda #$01
+        ldx #$00
+@build_controller_table:
+        sta button_table, x
+        inx
+        rol a
+        bne @build_controller_table
 ; One more vblank
 @waitvbl2:
         lda #$80
@@ -143,6 +173,63 @@ test_pal:
 test_table:
 .incbin "assets/test.nam"
 
+; ============================
+; Routine to scroll rightwards
+; ============================
+scroll_right:
+        ldx xscroll
+        inx
+        bne @no_reset_scroll
+
+        lda xscroll_coarse
+        eor #XCOARSE
+        sta xscroll_coarse
+
+@no_reset_scroll:
+        stx xscroll
+      
+        rts
+
+; ============================
+;   Simple sprite movement
+; ============================
+
+move_mario:
+        lda pad_1 
+        bit btn_up                      ; Left
+        beq :+
+        ldx mario_y
+        dex
+        dex
+        stx mario_y
+:
+        bit btn_down                    ; Left
+        beq :+
+        ldx mario_y
+        inx
+        inx
+        stx mario_y
+:
+        bit btn_left                    ; Left
+        beq :+
+        ldx mario_x
+        dex
+        dex
+        lda #$01
+        sta mario_dir
+        stx mario_x
+:
+        bit btn_right                   ; Right
+        beq :+
+        ldx mario_x
+        inx
+        inx
+        lda #$00
+        sta mario_dir
+        stx mario_x
+:
+        rts
+
 ; ============================ 
 ;          Main loop
 ; ============================
@@ -161,8 +248,6 @@ main_entry:
 
         jsr spr_init
 
-        jsr sprite_test
-
         spr_dma
 
         lda #$00
@@ -172,23 +257,16 @@ main_entry:
 
 @toploop:
 ; Logic Updates
-        ldx xscroll
-        inx
-        bne @no_reset_scroll
-
-        lda xscroll_coarse
-        eor #XCOARSE
-        sta xscroll_coarse
-
-@no_reset_scroll:
-
-        stx xscroll
-        
+        jsr scroll_right
+        jsr move_mario
+        jsr read_joy_safe_1
+        jsr draw_mario
 
 ; Graphics updates
         jsr wait_nmi
         ppu_disable
 
+        spr_dma
         ppu_load_scroll xscroll, yscroll
 
         ppu_enable
@@ -196,65 +274,75 @@ main_entry:
 ; ============================
 ;      Place some sprites
 ; ============================
-sprite_test:
-        ; Top-left of head
-        ldx #$60 ; Y
-        stx OAM_BASE
-        ldx #$32 ; Tile
-        stx OAM_BASE + 1
-        ldx #%00000000
-        stx OAM_BASE + 2
-        ldx #$40 ; X
-        stx OAM_BASE + 3
+draw_mario:
+        clc
+        lda mario_y
+        sta OAM_BASE
+        sta OAM_BASE + 4 ; Y
+        adc #$08
+        sta OAM_BASE + 8; Y
+        sta OAM_BASE + 12; Y
 
-        ; Top-right
-        ldx #$60
-        stx OAM_BASE + 4 ; Y
-        ldx #$41
-        stx OAM_BASE + 5 ; Tile
-        ldx #%00000000
-        stx OAM_BASE + 6
-        ldx #$48
-        stx OAM_BASE + 7 ; X
+        lda mario_dir
+        bne @rightside                  ; Facing to the right
+        lda #%01000000
+        sta OAM_BASE + 2
+        sta OAM_BASE + 6
+        sta OAM_BASE + 10
+        sta OAM_BASE + 14
 
-        ; Bottom-left of head
-        ldx #$68
-        stx OAM_BASE + 8; Y
-        ldx #$42
-        stx OAM_BASE + 9 ; Tile
-        ldx #%00000000
-        stx OAM_BASE + 10
-        ldx #$40
-        stx OAM_BASE + 11 ; X
+        clc
+        lda mario_x
+        sta OAM_BASE + 3
+        sta OAM_BASE + 11 ; X
+        adc #$08
+        sta OAM_BASE + 7 ; X
+        sta OAM_BASE + 15 ; X
+        lda #$00
+        beq @tile_sel
 
-        ; Bottom-right
-        ldx #$68
-        stx OAM_BASE + 12; Y
-        ldx #$43
-        stx OAM_BASE + 13 ; Tile
-        ldx #%00000000
-        stx OAM_BASE + 14
-        ldx #$48
-        stx OAM_BASE + 15 ; X
 
+
+@rightside:
+        lda #%00000000
+        sta OAM_BASE + 2
+        sta OAM_BASE + 6
+        sta OAM_BASE + 10
+        sta OAM_BASE + 14
+
+        clc
+        lda mario_x
+        sta OAM_BASE + 7 ; X
+        sta OAM_BASE + 15 ; X
+        adc #$08
+        sta OAM_BASE + 3
+        sta OAM_BASE + 11 ; X
+        lda #$00
+        beq @tile_sel
+
+@tile_sel:
+        lda #$32 ; Tile
+        sta OAM_BASE + 1
+        lda #$41
+        sta OAM_BASE + 5 ; Tile
+        lda #$42
+        sta OAM_BASE + 9 ; Tile
+        lda #$43
+        sta OAM_BASE + 13 ; Tile
+
+        lda mario_dir
+        beq :+  
+        lda #%01000000                  ; Set flip
+        bne :++
+:
+        lda #%00000000                  ; Set unflipped
+:
+        sta OAM_BASE + 2
+        sta OAM_BASE + 6
+        sta OAM_BASE + 10
+        sta OAM_BASE + 14
 
         rts
-
-; ============================ 
-;     Goofy palette cycle
-; ============================
-
-palcycle_test:
-; Set write address to backdrop palette
-        ppu_load_addr #$3f, #$00
-
-; Increment backdrop palette value
-        ldx pal_val
-        inx
-        stx PPUDATA
-        stx pal_val
-        rts
-
 
 .include "utils.asm"                    ; Pull in NMI support code
 .include "sprites.asm"

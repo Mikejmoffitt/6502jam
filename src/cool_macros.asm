@@ -1,18 +1,27 @@
 ; Some potentially useful macros for NES stuff
 ; Handy NES defines
-PPUCTRL     = $2000
-PPUMASK     = $2001
-PPUSTATUS   = $2002
-OAMADDR     = $2003
-OAMDATA     = $2004
-PPUSCROLL   = $2005
-PPUADDR     = $2006
-PPUDATA     = $2007
-OAMDMA      = $4014
-DMCFREQ     = $4010
+PPUCTRL         = $2000
+PPUMASK         = $2001
+PPUSTATUS       = $2002
+OAMADDR         = $2003
+OAMDATA         = $2004
+PPUSCROLL       = $2005
+PPUADDR         = $2006
+PPUDATA         = $2007
+OAMDMA          = $4014
+DMCFREQ         = $4010
 
-XCOARSE     = $01
-YCOARSE     = $02
+XCOARSE         = $01
+YCOARSE         = $02
+
+BUTTON_A        = %00000001
+BUTTON_B        = %00000010
+BUTTON_SEL      = %00000100
+BUTTON_START    = %00001000
+BUTTON_UP       = %00010000
+BUTTON_DOWN     = %00100000
+BUTTON_LEFT     = %01000000
+BUTTON_RIGHT    = %10000000
 
 ; Latch the PPU address; mangles Y
 .macro ppu_load_addr addr, addr_e
