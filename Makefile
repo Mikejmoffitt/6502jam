@@ -19,7 +19,7 @@ build: $(EXECUTABLE)
 all: $(EXECUTABLE)
 
 clean:
-	rm -f jam.nes listing.txt main.o map.txt
+	rm -f jam.nes listing.txt main.o map.txt jam.nes.deb jam.cdl
 
 $(EXECUTABLE):
 	$(AS) $(SRCDIR)/$(TOPLEVEL) $(ASFLAGS) -I $(SRCDIR) -l $(LISTNAME) -o $(OBJNAME)

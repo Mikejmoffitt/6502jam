@@ -11,91 +11,116 @@ PPUDATA     = $2007
 OAMDMA      = $4014
 DMCFREQ     = $4010
 
-; Turn off rendering
-.macro ppu_disable
-	lda #$00			; 
-	sta PPUMASK			; Disable rendering
-.endmacro
-
-; Turn on rendering
-.macro ppu_enable
-	lda ppu_normal_state
-	sta PPUMASK			; Put back PPU rendering state to what it was before
-	lda #%10010000
-	sta PPUCTRL			; Re-enable NMI
-.endmacro
-
+XCOARSE     = $01
+YCOARSE     = $02
 
 ; Latch the PPU address; mangles Y
 .macro ppu_load_addr addr, addr_e
-	bit PPUSTATUS
-	lda addr
-	sta PPUADDR
-	lda addr_e
-	sta PPUADDR
+        bit PPUSTATUS
+        lda addr
+        sta PPUADDR
+        lda addr_e
+        sta PPUADDR
 .endmacro
 
 ; Latch the PPU fine scroll; mangles X
 .macro ppu_load_scroll cam_x, cam_y
-	bit PPUSTATUS
-	lda cam_x
-	sta PPUSCROLL
-	lda cam_y
-	sta PPUSCROLL
+        bit PPUSTATUS
+        lda cam_x
+        sta PPUSCROLL
+        lda cam_y
+        sta PPUSCROLL
 .endmacro
 
 ; Load a full palette
 .macro ppu_load_full_palette pal_data
-	ppu_load_addr #$3f, #$00
-	ldx #$00
+        ppu_load_addr #$3f, #$00
+        ldx #$00
 :
-	lda pal_data, x
-	sta PPUDATA
-	inx
-	cpx #$20
-	bne :-
+        lda pal_data, x
+        sta PPUDATA
+        inx
+        cpx #$20
+        bne :-
 .endmacro
 
 ; Load a full BG palette
 .macro ppu_load_bg_palette pal_data
-	ppu_load_addr #$3f, #$00
-	ldx #$00
+        ppu_load_addr #$3f, #$00
+        ldx #$00
 :
-	lda pal_data, x
-	sta PPUDATA
-	inx
-	cpx #$10
-	bne :-
+        lda pal_data, x
+        sta PPUDATA
+        inx
+        cpx #$10
+        bne :-
 .endmacro
 
 ; Load a full SPR palette
 .macro ppu_load_spr_palette pal_data
-	ppu_load_addr #$3f, #$10
-	ldx #$00
+        ppu_load_addr #$3f, #$10
+        ldx #$00
 :
-	lda pal_data, x
-	sta PPUDATA
-	inx
-	cpx #$10
-	bne :-
+        lda pal_data, x
+        sta PPUDATA
+        inx
+        cpx #$10
+        bne :-
 .endmacro
 
 .macro ppu_write_data data
-	lda data
-	sta PPUDATA
+        lda data
+        sta PPUDATA
 
-.macro	inc16	addr
-	clc
-	lda	addr
-	adc #$01
-	sta	addr
-	lda	addr+1
-	adc	#$00
-	sta	addr+1
+.macro inc16 addr
+        clc
+        lda        addr
+        adc #$01
+        sta        addr
+        lda        addr+1
+        adc        #$00
+        sta        addr+1
 .endmacro
 
 ; Run an OAM DMA
 .macro spr_dma
-	lda #$02
-	sta OAMDMA
+        lda #$02
+        sta OAMDMA
+.endmacro
+
+; Copy binary nametable + attribute data into VRAM
+
+.macro ppu_load_nametable source, screen
+        ldy screen                      ; Upper byte of VRAM Address
+        ldx #$00                        ; Lower byte of VRAM Address
+
+        bit PPUSTATUS
+        sty PPUADDR
+        stx PPUADDR
+
+; X is the offset in both the source table and the nametable destination.
+; PPUADDR increments with every write to PPUDATA, so an unrolled two-level
+; nested loop becomes four single loops, taking us through the source
+; table in four chunks.
+
+:
+        lda source, x                   ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $100, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $200, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $300, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
 .endmacro
