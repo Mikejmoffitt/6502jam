@@ -36,6 +36,9 @@ button_table:
         mario_dy:                               .res 2
         mario_speed:                            .res 2
 
+.segment "SAVE"
+.res 1
+
 .segment "CODE"
 
 ; Turn off rendering
@@ -96,18 +99,37 @@ irq_vector:
 ; ============================
 
 reset_vector:
-        sei                              ; ignore IRQs
-        cld                              ; No decimal mode, it isn't supported
+; Basic 6502 init
+        sei                             ; ignore IRQs
+        cld                             ; No decimal mode, it isn't supported
         ldx #$40
-        stx $4017                        ; Disable APU frame IRQ
+        stx $4017                       ; Disable APU frame IRQ
         ldx #$ff
-        txs                              ; Set up stack
+        txs                             ; Set up stack
         
-        inx                              ; X = 0 now
-        stx PPUCTRL                      ; Disable NMI
-        stx PPUMASK                      ; Disable rendering
-        stx DMCFREQ                      ; Disable DMC IRQs
-        stx $e000                        ; Disable MMC3 IRQs
+; Clear some PPU registers
+        inx                             ; X = 0 now
+        stx PPUCTRL                     ; Disable NMI
+        stx PPUMASK                     ; Disable rendering
+        stx DMCFREQ                     ; Disable DMC IRQs
+
+; Configure MMC3
+        stx $e000                       ; Disable MMC3 IRQs
+        lda #$07
+        sta $8000                       ; Select bank A000-BFFF
+        lda #$00
+        sta $8001                       ; Choose bank 0
+        lda #$06
+        sta $8000                       ; Select bank A000-BFFF
+        lda #$00
+        sta $8001                       ; Choose bank 0
+
+        lda #%10000000
+        sta $a001                       ; Enable PRG-RAM
+
+        lda #$00
+        sta $a000                        ; Set vertical mirroring
+
 
 ; Wait for first vblank
 @waitvbl1:
@@ -116,7 +138,7 @@ reset_vector:
         bne @waitvbl1
 
 ; Wait for the PPU to go stable
-        txa                              ; X still = 0; clear A with this
+        txa                             ; X still = 0; clear A with this
 @clrmem:
         sta $000, x
         sta $100, x                 
@@ -160,7 +182,6 @@ reset_vector:
         stx PPUMASK
 
         ppu_enable
-
 
         jmp main_entry                   ; GOTO main loop
 
