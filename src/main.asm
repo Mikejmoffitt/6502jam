@@ -181,6 +181,8 @@ test_pal:
 
 test_table:
 .incbin "assets/test.nam"
+test_chr:
+.incbin "assets/mario.chr"
 
 ; ============================
 ; Routine to scroll rightwards
@@ -268,7 +270,10 @@ main_entry:
         jsr wait_nmi
         ppu_disable
 
-        ppu_load_nametable test_table, #$20
+        ppu_write_4k test_table, #$20
+
+        ppu_write_16k test_chr, #$00
+        ppu_write_16k test_chr + $1000, #$10
 
         ppu_load_full_palette test_pal
 

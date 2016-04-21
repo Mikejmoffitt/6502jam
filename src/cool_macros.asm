@@ -122,8 +122,8 @@ BUTTON_RIGHT    = %10000000
 
 ; Copy binary nametable + attribute data into VRAM
 
-.macro ppu_load_nametable source, screen
-        ldy screen                      ; Upper byte of VRAM Address
+.macro ppu_write_4k source, index
+        ldy index                       ; Upper byte of VRAM Address
         ldx #$00                        ; Lower byte of VRAM Address
 
         bit PPUSTATUS
@@ -152,6 +152,115 @@ BUTTON_RIGHT    = %10000000
         bne :-
 :
         lda source + $300, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+.endmacro
+
+.macro ppu_write_16k source, index
+        ldy index                       ; Upper byte of VRAM Address
+        ldx #$00                        ; Lower byte of VRAM Address
+
+        bit PPUSTATUS
+        sty PPUADDR
+        stx PPUADDR
+
+; X is the offset in both the source table and the nametable destination.
+; PPUADDR increments with every write to PPUDATA, so an unrolled two-level
+; nested loop becomes four single loops, taking us through the source
+; table in four chunks.
+
+:
+        lda source, x                   ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $100, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $200, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $300, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $400, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $500, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $600, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $700, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $800, x                   ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $900, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $a00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $b00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $c00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $d00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $e00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+:
+        lda source + $f00, x            ; Offset within both source and dest.
+        sta PPUDATA
+        inx
+        bne :-
+.endmacro
+
+; Load $100 of pattern data into index in CHR RAM
+.macro ppu_write_1k source, index
+        ldy index
+        ldx #$00
+        bit PPUSTATUS
+        sty PPUADDR
+        stx PPUADDR
+:
+        lda source, x
         sta PPUDATA
         inx
         bne :-
