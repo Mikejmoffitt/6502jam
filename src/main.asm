@@ -1,8 +1,7 @@
 .include "header.asm"
 .include "cool_macros.asm"
 .include "zeropage.asm"
-
-OAM_BASE = $200
+.include "resourcebanks.asm"
 
 .segment "RAM"
 
@@ -17,10 +16,8 @@ button_table:
         btn_left:                               .res 1
         btn_right:                              .res 1
 
-        xscroll:                                .res 1
-        xscroll_coarse:                         .res 1
-        yscroll:                                .res 1
-        yscroll_coarse:                         .res 1
+        xscroll:                                .res 2
+        yscroll:                                .res 2
         ppuctrl_config:                         .res 1
 
         pad_1:                                  .res 1
@@ -36,17 +33,6 @@ button_table:
         mario_dy:                               .res 2
         mario_speed:                            .res 2
 
-; Some CHR resources
-.segment "BANK00"
-
-test_chr:
-.incbin "assets/mario.chr"
-
-; Nametables
-.segment "BANK01"
-
-test_table:
-.incbin "assets/test.nam"
 
 .segment "BANK15"
 
@@ -62,8 +48,8 @@ test_table:
         sta PPUMASK                     ; Put back PPU rendering state to what it was before
 
         lda ppuctrl_config
-        ora xscroll_coarse              ; Bring in X scroll coarse bit
-        ora yscroll_coarse              ; Y scroll coarse bit
+        ora xscroll+1                   ; Bring in X scroll coarse bit
+        ora yscroll+1                    ; Y scroll coarse bit
         sta PPUCTRL                     ; Re-enable NMI
 .endmacro
 
@@ -181,34 +167,6 @@ reset_vector:
 
         jmp main_entry                   ; GOTO main loop
 
-test_pal:
-        .byt $22, $37, $17, $0F
-        .byt $22, $30, $31, $0F
-        .byt $22, $29, $19, $0F
-        .byt $22, $26, $15, $0F
-        .byt $22, $16, $36, $12
-        .byt $22, $37, $3a, $3d
-        .byt $22, $38, $3b, $3e
-        .byt $22, $39, $3c, $3f
-
-
-; ============================
-; Routine to scroll rightwards
-; ============================
-scroll_right:
-        ldx xscroll
-        inx
-        bne @no_reset_scroll
-
-        lda xscroll_coarse
-        eor #XCOARSE
-        sta xscroll_coarse
-
-@no_reset_scroll:
-        stx xscroll
-      
-        rts
-
 ; ============================
 ;   Simple sprite movement
 ; ============================
@@ -279,15 +237,17 @@ main_entry:
         ppu_disable
 
         bank_load #$01
-        ppu_write_4k test_table, #$20
+        ppu_write_4k table1, #$20
+        ppu_write_4k table2, #$24
 
         bank_load #$00
         ; Sprites
-        ppu_write_16k test_chr, #$00
+        ppu_write_16k gfx1, #$00
         ; Backdrop
-        ppu_write_16k test_chr + $1000, #$10
+        ppu_write_16k gfx1 + $1000, #$10
 
-        ppu_load_full_palette test_pal
+        bank_load #$00
+        ppu_load_full_palette palettes+$00
 
         ppu_enable
         jsr wait_nmi
@@ -308,16 +268,21 @@ main_entry:
 @toploop:
 ; Logic Updates
         jsr read_joy_safe_1
-        jsr scroll_right
+        add16 xscroll, #$01
         jsr move_mario
-
         jsr draw_mario
+
+        ldx xscroll
+        lda #$00
+        sta xscroll
+        stx xscroll
 
 ; Graphics updates
         jsr wait_nmi
         ppu_disable
 
         spr_dma
+
         ppu_load_scroll xscroll, yscroll
 
         ppu_enable

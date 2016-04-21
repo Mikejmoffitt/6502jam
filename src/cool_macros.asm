@@ -1,5 +1,4 @@
 ; Some potentially useful macros for NES stuff
-; Handy NES defines
 PPUCTRL         = $2000
 PPUMASK         = $2001
 PPUSTATUS       = $2002
@@ -23,7 +22,9 @@ BUTTON_DOWN     = %00100000
 BUTTON_LEFT     = %01000000
 BUTTON_RIGHT    = %10000000
 
-; Latch the PPU address; mangles Y
+OAM_BASE        = $200
+
+; Latch the PPU address; mangles A
 .macro ppu_load_addr addr, addr_e
         bit PPUSTATUS
         lda addr
@@ -32,13 +33,25 @@ BUTTON_RIGHT    = %10000000
         sta PPUADDR
 .endmacro
 
-; Latch the PPU fine scroll; mangles X
+; Latch the PPU scroll; mangles A
 .macro ppu_load_scroll cam_x, cam_y
         bit PPUSTATUS
         lda cam_x
         sta PPUSCROLL
         lda cam_y
         sta PPUSCROLL
+        ; Clamp scroll values
+        lda xscroll+1
+        and #%00000001
+        sta xscroll+1
+        lda yscroll+1
+        and #%00000001
+        sta yscroll+1
+
+        lda ppuctrl_config
+        ora xscroll+1              ; Bring in X scroll coarse bit
+        ora yscroll+1              ; Y scroll coarse bit
+        sta PPUCTRL                     ; Re-enable NMI
 .endmacro
 
 ; Switch UOROM banks
