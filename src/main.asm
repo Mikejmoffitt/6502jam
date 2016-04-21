@@ -4,7 +4,7 @@
 
 OAM_BASE = $200
 
-.segment "BSS"
+.segment "RAM"
 
 ; Button comparison table
 button_table:
@@ -36,10 +36,7 @@ button_table:
         mario_dy:                               .res 2
         mario_speed:                            .res 2
 
-.segment "SAVE"
-.res 1
-
-.segment "CODE"
+.segment "BANK15"
 
 ; Turn off rendering
 .macro ppu_disable
@@ -113,23 +110,10 @@ reset_vector:
         stx PPUMASK                     ; Disable rendering
         stx DMCFREQ                     ; Disable DMC IRQs
 
-; Configure MMC3
-        stx $e000                       ; Disable MMC3 IRQs
-        lda #$07
-        sta $8000                       ; Select bank A000-BFFF
-        lda #$00
-        sta $8001                       ; Choose bank 0
-        lda #$06
-        sta $8000                       ; Select bank A000-BFFF
-        lda #$00
-        sta $8001                       ; Choose bank 0
-
-        lda #%10000000
-        sta $a001                       ; Enable PRG-RAM
+; Configure UOROM
 
         lda #$00
-        sta $a000                        ; Set vertical mirroring
-
+        sta $8000
 
 ; Wait for first vblank
 @waitvbl1:
@@ -396,12 +380,6 @@ draw_mario:
 
 .include "utils.asm"                    ; Pull in NMI support code
 .include "sprites.asm"
-
-.segment "CHR"
-.incbin "assets/mario.chr"
-
-;.segment "SAVE"
-;        .res 1
 
 .segment "VECTORS"
 
