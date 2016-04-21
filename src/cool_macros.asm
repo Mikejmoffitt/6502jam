@@ -41,6 +41,13 @@ BUTTON_RIGHT    = %10000000
         sta PPUSCROLL
 .endmacro
 
+; Switch UOROM banks
+.macro bank_load num
+:
+        lda num
+        sty :- + 1 ; This is done this way to avoid bus conflicts
+.endmacro
+
 ; Load a full palette
 .macro ppu_load_full_palette pal_data
         ppu_load_addr #$3f, #$00

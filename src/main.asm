@@ -36,6 +36,17 @@ button_table:
         mario_dy:                               .res 2
         mario_speed:                            .res 2
 
+; Some CHR resources
+.segment "BANK00"
+
+test_chr:
+.incbin "assets/mario.chr"
+
+.segment "BANK01"
+
+test_table:
+.incbin "assets/test.nam"
+
 .segment "BANK15"
 
 ; Turn off rendering
@@ -179,10 +190,6 @@ test_pal:
         .byt $22, $38, $3b, $3e
         .byt $22, $39, $3c, $3f
 
-test_table:
-.incbin "assets/test.nam"
-test_chr:
-.incbin "assets/mario.chr"
 
 ; ============================
 ; Routine to scroll rightwards
@@ -270,8 +277,14 @@ main_entry:
         jsr wait_nmi
         ppu_disable
 
-        ppu_write_4k test_table, #$20
+:
+        ldy #$01
+        sty :- + 1
 
+        ppu_write_4k test_table, #$20
+:
+        ldy #$00
+        sty :- + 1
         ppu_write_16k test_chr, #$00
         ppu_write_16k test_chr + $1000, #$10
 
