@@ -42,6 +42,7 @@ button_table:
 test_chr:
 .incbin "assets/mario.chr"
 
+; Nametables
 .segment "BANK01"
 
 test_table:
@@ -277,15 +278,13 @@ main_entry:
         jsr wait_nmi
         ppu_disable
 
-:
-        ldy #$01
-        sty :- + 1
-
+        bank_load #$01
         ppu_write_4k test_table, #$20
-:
-        ldy #$00
-        sty :- + 1
+
+        bank_load #$00
+        ; Sprites
         ppu_write_16k test_chr, #$00
+        ; Backdrop
         ppu_write_16k test_chr + $1000, #$10
 
         ppu_load_full_palette test_pal

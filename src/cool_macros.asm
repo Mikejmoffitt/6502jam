@@ -44,7 +44,7 @@ BUTTON_RIGHT    = %10000000
 ; Switch UOROM banks
 .macro bank_load num
 :
-        lda num
+        ldy num
         sty :- + 1 ; This is done this way to avoid bus conflicts
 .endmacro
 
