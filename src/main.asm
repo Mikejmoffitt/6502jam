@@ -173,53 +173,33 @@ reset_vector:
 
 move_mario:
 
-        lda pad_1
-        bit btn_a
-        beq @noa
+        key_down pad_1, btn_a
         add16 mario_speed, #$01
-@noa:
+:
 
-        lda pad_1
-        bit btn_b
-        beq @nob
+        key_down pad_1, btn_b
         sub16 mario_speed, #$01
-@nob:
+:
 
-        lda pad_1
-        bit btn_start
-        beq @nostart
+        key_down pad_1, btn_start
         lda #$00
         sta mario_dy
         sta mario_dy+1
         sta mario_dx
         sta mario_dx+1
-
-@nostart:
-
-        lda pad_1 
-        bit btn_up                      ; Up
-        beq @noup
+:
+        key_isdown pad_1, btn_up
         sub16 mario_dy, mario_speed
-
-@noup:
-        lda pad_1 
-        bit btn_down                    ; Down
-        beq @nodown
+:
+        key_isdown pad_1, btn_down
         add16 mario_dy, mario_speed
-
-@nodown:
-        lda pad_1 
-        bit btn_left                    ; Left
-        beq @noleft
+:
+        key_isdown pad_1, btn_left
         sub16 mario_dx, mario_speed
-
-@noleft:
-        lda pad_1 
-        bit btn_right                   ; Right
-        beq @noright
+:
+        key_isdown pad_1, btn_right
         add16 mario_dx, mario_speed        
-
-@noright:
+:
 
         ; Apply X and Y vectors to Mario
         sum16 mario_x, mario_dx
@@ -338,7 +318,7 @@ draw_mario:
 @tile_sel:
         
         lda mario_speed
-        and #$04
+        and #$01
         bne @frame2
 
         lda #$02 ; Tile

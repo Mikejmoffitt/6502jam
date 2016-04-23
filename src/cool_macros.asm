@@ -30,6 +30,40 @@ OAM_BASE        = $200
         sta PPUADDR
 .endmacro
 
+; Check if a button is held; branch to : if not
+.macro key_isdown pad, btn_comp
+        lda pad
+        bit btn_comp
+        beq :+
+.endmacro
+
+; Check if a button is up; branch to : if not
+.macro key_isup pad, btn_comp
+        lda pad
+        bit btn_comp
+        bne :+
+.endmacro
+
+; Check if a button has just been pressed; branch to : if not
+.macro key_down pad, btn_comp
+        lda pad
+        bit btn_comp
+        beq :+
+        lda pad+1 ;pad_prev
+        bit btn_comp
+        bne :+
+.endmacro
+
+; Check if a button has just been released; branch to : if not
+.macro key_up pad, btn_comp
+        lda pad
+        bit btn_comp
+        bne:+
+        lda pad+1 ; pad_prev
+        bit btn_comp
+        beq :+
+.endmacro
+
 ; Latch the PPU scroll; mangles A
 .macro ppu_load_scroll cam_x, cam_y
         bit PPUSTATUS
