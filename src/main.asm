@@ -237,14 +237,14 @@ main_entry:
         ppu_disable
 
         bank_load #$01
-        ppu_write_4k table1, #$20
-        ppu_write_4k table2, #$24
+        ppu_write_8kbit table1, #$20
+        ppu_write_8kbit table2, #$24
 
         bank_load #$00
         ; Sprites
-        ppu_write_16k gfx1, #$00
+        ppu_write_32kbit gfx1, #$00
         ; Backdrop
-        ppu_write_16k gfx1 + $1000, #$10
+        ppu_write_32kbit gfx1 + $1000, #$10
 
         bank_load #$00
         ppu_load_full_palette palettes+$00
@@ -268,7 +268,6 @@ main_entry:
 @toploop:
 ; Logic Updates
         jsr read_joy_safe_1
-        add16 xscroll, #$01
         jsr move_mario
         jsr draw_mario
 
@@ -337,14 +336,36 @@ draw_mario:
         beq @tile_sel
 
 @tile_sel:
-        lda #$32 ; Tile
+        
+        lda mario_speed
+        and #$04
+        bne @frame2
+
+        lda #$02 ; Tile
         sta OAM_BASE + 1
-        lda #$41
+        lda #$03
         sta OAM_BASE + 5 ; Tile
-        lda #$42
+        lda #$12
         sta OAM_BASE + 9 ; Tile
-        lda #$43
+        lda #$13
         sta OAM_BASE + 13 ; Tile
+        lda #$00
+        beq @donetiles
+
+@frame2:
+        lda #$00 ; Tile
+        sta OAM_BASE + 1
+        lda #$01
+        sta OAM_BASE + 5 ; Tile
+        lda #$10
+        sta OAM_BASE + 9 ; Tile
+        lda #$11
+        sta OAM_BASE + 13 ; Tile
+
+        lda #$00
+        beq @donetiles
+
+@donetiles:
 
         lda mario_dir
         beq :+  

@@ -10,9 +10,6 @@ PPUDATA         = $2007
 OAMDMA          = $4014
 DMCFREQ         = $4010
 
-XCOARSE         = $01
-YCOARSE         = $02
-
 BUTTON_A        = %00000001
 BUTTON_B        = %00000010
 BUTTON_SEL      = %00000100
@@ -142,7 +139,7 @@ OAM_BASE        = $200
 
 ; Copy binary nametable + attribute data into VRAM
 
-.macro ppu_write_4k source, index
+.macro ppu_write_8kbit source, index
         ldy index                       ; Upper byte of VRAM Address
         ldx #$00                        ; Lower byte of VRAM Address
 
@@ -177,7 +174,7 @@ OAM_BASE        = $200
         bne :-
 .endmacro
 
-.macro ppu_write_16k source, index
+.macro ppu_write_32kbit source, index
         ldy index                       ; Upper byte of VRAM Address
         ldx #$00                        ; Lower byte of VRAM Address
 
@@ -231,7 +228,7 @@ OAM_BASE        = $200
         inx
         bne :-
 :
-        lda source + $800, x                   ; Offset within both source and dest.
+        lda source + $800, x            ; Offset within both source and dest.
         sta PPUDATA
         inx
         bne :-
@@ -273,7 +270,7 @@ OAM_BASE        = $200
 .endmacro
 
 ; Load $100 of pattern data into index in CHR RAM
-.macro ppu_write_1k source, index
+.macro ppu_write_2kbit source, index
         ldy index
         ldx #$00
         bit PPUSTATUS
