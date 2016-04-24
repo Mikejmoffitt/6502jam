@@ -2,7 +2,7 @@
 
 
 ; Palettes and CHR
-.segment "BANK00"
+.segment "BANK0"
 
 palettes:
 .incbin "assets/palettes.dat"
@@ -11,9 +11,7 @@ gfx1:
 .incbin "assets/gfx1.chr"
 
 ; Nametables
-.segment "BANK01"
+.segment "BANK1"
 
-table1:
+field1_table:
 .incbin "assets/test1.nam"
-table2:
-.incbin "assets/test2.nam"

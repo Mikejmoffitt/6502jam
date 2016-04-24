@@ -5,7 +5,13 @@
 
 .segment "RAM"
 
-; Button comparison table
+        vblank_flag:                            .res 1
+        frame_counter:                          .res 1
+        ppuctrl_config:                         .res 1
+        ppumask_config:                         .res 1
+        xscroll:                                .res 2
+        yscroll:                                .res 2
+
 button_table:
         btn_a:                                  .res 1
         btn_b:                                  .res 1
@@ -16,25 +22,20 @@ button_table:
         btn_left:                               .res 1
         btn_right:                              .res 1
 
-        xscroll:                                .res 2
-        yscroll:                                .res 2
-        ppuctrl_config:                         .res 1
-
+pad_data:
         pad_1:                                  .res 1
         pad_1_prev:                             .res 1
         pad_2:                                  .res 1
         pad_2_prev:                             .res 1
 
-        mario_dir:                              .res 1
-
-        mario_x:                                .res 2
-        mario_y:                                .res 2
-        mario_dx:                               .res 2
-        mario_dy:                               .res 2
-        mario_speed:                            .res 2
+game_state:
+        playfield_top:                          .res 1
+        playfield_bottom:                       .res 1
+        playfield_left:                         .res 1
+        playfield_right:                        .res 1
 
 
-.segment "BANK15"
+.segment "BANKF"
 
 ; Turn off rendering
 .macro ppu_disable
@@ -44,7 +45,7 @@ button_table:
 
 ; Turn on rendering
 .macro ppu_enable
-        lda ppu_normal_state
+        lda ppumask_config
         sta PPUMASK                     ; Put back PPU rendering state to what it was before
 
         lda ppuctrl_config
@@ -62,6 +63,10 @@ nmi_vector:
         pha
         tya
         pha
+
+        ldx frame_counter               ; Update frame counter
+        inx
+        stx frame_counter
 
         lda #$00
         sta PPUCTRL                     ; Disable NMI
@@ -160,7 +165,7 @@ reset_vector:
 
 
         ldx #%00011110
-        stx ppu_normal_state
+        stx ppumask_config
         stx PPUMASK
 
         ppu_enable
@@ -168,43 +173,35 @@ reset_vector:
         jmp main_entry                   ; GOTO main loop
 
 ; ============================
-;   Simple sprite movement
+;   Initialize the playfield
 ; ============================
+playfield_init:
 
-move_mario:
+        jsr wait_nmi
+        ppu_disable
+        
+        bank_load #$01
+        ppu_write_8kbit field1_table, #$20
 
-        key_down pad_1, btn_a
-        add16 mario_speed, #$01
-:
+        bank_load #$00
+        ; Sprites
+        ppu_write_32kbit gfx1, #$00
+        ; Backdrop
+        ppu_write_32kbit gfx1 + $1000, #$10
+        ppu_load_full_palette palettes+$00
 
-        key_down pad_1, btn_b
-        sub16 mario_speed, #$01
-:
+        lda #$0F
+        sta playfield_left
+        lda #$f0
+        sta playfield_right
+        lda #$50
+        sta playfield_top
+        lda #$d0
+        sta playfield_bottom
 
-        key_down pad_1, btn_start
-        lda #$00
-        sta mario_dy
-        sta mario_dy+1
-        sta mario_dx
-        sta mario_dx+1
-:
-        key_isdown pad_1, btn_up
-        sub16 mario_dy, mario_speed
-:
-        key_isdown pad_1, btn_down
-        add16 mario_dy, mario_speed
-:
-        key_isdown pad_1, btn_left
-        sub16 mario_dx, mario_speed
-:
-        key_isdown pad_1, btn_right
-        add16 mario_dx, mario_speed        
-:
-
-        ; Apply X and Y vectors to Mario
-        sum16 mario_x, mario_dx
-        sum16 mario_y, mario_dy
-
+        lda #$80
+        sta disc_y+1
+        sta disc_x+1
 
         rts
 
@@ -213,50 +210,44 @@ move_mario:
 ; ============================
 
 main_entry:
-        jsr wait_nmi
-        ppu_disable
-
-        bank_load #$01
-        ppu_write_8kbit table1, #$20
-        ppu_write_8kbit table2, #$24
-
-        bank_load #$00
-        ; Sprites
-        ppu_write_32kbit gfx1, #$00
-        ; Backdrop
-        ppu_write_32kbit gfx1 + $1000, #$10
-
-        bank_load #$00
-        ppu_load_full_palette palettes+$00
-
-        ppu_enable
-        jsr wait_nmi
-        ppu_disable
-
+        jsr playfield_init
         jsr spr_init
-
         spr_dma
 
         lda #$00
         sta yscroll
-
-        lda #$04
-        sta mario_speed
-
+        jsr wait_nmi   
         ppu_enable
-
 @toploop:
 ; Logic Updates
         jsr read_joy_safe_1
-        jsr move_mario
-        jsr draw_mario
+        jsr read_joy_safe_2
+        bank_load #$0E
+        jsr disc_movement
 
-        ldx xscroll
-        lda #$00
-        sta xscroll
-        stx xscroll
-
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
+        jsr disc_draw
 ; Graphics updates
+        ; Enable emphasis to test performance
+        lda ppumask_config
+        ora #%01100000
+        sta PPUMASK
         jsr wait_nmi
         ppu_disable
 
@@ -266,103 +257,14 @@ main_entry:
 
         ppu_enable
         jmp @toploop
-; ============================
-;      Place some sprites
-; ============================
-draw_mario:
-        clc
-        lda mario_y+1
-        sta OAM_BASE
-        sta OAM_BASE + 4 ; Y
-        adc #$08
-        sta OAM_BASE + 8; Y
-        sta OAM_BASE + 12; Y
 
-        lda mario_dir
-        bne @rightside                  ; Facing to the right
-        lda #%01000000
-        sta OAM_BASE + 2
-        sta OAM_BASE + 6
-        sta OAM_BASE + 10
-        sta OAM_BASE + 14
-
-        clc
-        lda mario_x+1
-        sta OAM_BASE + 3
-        sta OAM_BASE + 11 ; X
-        adc #$08
-        sta OAM_BASE + 7 ; X
-        sta OAM_BASE + 15 ; X
-        lda #$00
-        beq @tile_sel
-
-
-
-@rightside:
-        lda #%00000000
-        sta OAM_BASE + 2
-        sta OAM_BASE + 6
-        sta OAM_BASE + 10
-        sta OAM_BASE + 14
-
-        clc
-        lda mario_x
-        sta OAM_BASE + 7 ; X
-        sta OAM_BASE + 15 ; X
-        adc #$08
-        sta OAM_BASE + 3
-        sta OAM_BASE + 11 ; X
-        lda #$00
-        beq @tile_sel
-
-@tile_sel:
-        
-        lda mario_speed
-        and #$01
-        bne @frame2
-
-        lda #$02 ; Tile
-        sta OAM_BASE + 1
-        lda #$03
-        sta OAM_BASE + 5 ; Tile
-        lda #$12
-        sta OAM_BASE + 9 ; Tile
-        lda #$13
-        sta OAM_BASE + 13 ; Tile
-        lda #$00
-        beq @donetiles
-
-@frame2:
-        lda #$00 ; Tile
-        sta OAM_BASE + 1
-        lda #$01
-        sta OAM_BASE + 5 ; Tile
-        lda #$10
-        sta OAM_BASE + 9 ; Tile
-        lda #$11
-        sta OAM_BASE + 13 ; Tile
-
-        lda #$00
-        beq @donetiles
-
-@donetiles:
-
-        lda mario_dir
-        beq :+  
-        lda #%01000000                  ; Set flip
-        bne :++
-:
-        lda #%00000000                  ; Set unflipped
-:
-        sta OAM_BASE + 2
-        sta OAM_BASE + 6
-        sta OAM_BASE + 10
-        sta OAM_BASE + 14
-
-        rts
 
 .include "utils.asm"                    ; Pull in NMI support code
 .include "sprites.asm"
+
+; Some gameplay code goes here
+.segment "BANKE"
+.include "disc.asm"
 
 .segment "VECTORS"
 

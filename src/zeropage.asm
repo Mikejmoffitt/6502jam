@@ -1,7 +1,17 @@
 .segment "ZEROPAGE"
 
-vblank_flag:                            .res 1
-ppu_normal_state:                       .res 1
-pal_val:                                .res 1
 temp:                                   .res 1
-next_spr:                               .res 1
+
+disc_x:                                 .res 2
+disc_y:                                 .res 2
+disc_dx:                                .res 2
+disc_dy:                                .res 2
+disc_anim:                              .res 1
+
+p1_x:                                   .res 2
+p1_y:                                   .res 2
+p1_dx:                                  .res 2
+p1_dy:                                  .res 2
+
+p2_y:                                   .res 2
+

@@ -21,6 +21,43 @@ BUTTON_RIGHT    = %10000000
 
 OAM_BASE        = $200
 
+; OAM Acess macros
+.macro write_oam_y arg
+        sta OAM_BASE+((arg) << 2)
+.endmacro
+
+.macro write_oam_tile arg
+        sta OAM_BASE+1+((arg) << 2)
+.endmacro
+
+.macro write_oam_attr arg
+        sta OAM_BASE+2+((arg) << 2)
+.endmacro
+
+.macro write_oam_x arg
+        sta OAM_BASE+3+((arg) << 2)
+.endmacro
+
+.macro set_oam_y arg, val
+        lda val
+        write_oam_y arg
+.endmacro
+
+.macro set_oam_tile arg, val
+        lda val
+        write_oam_tile arg
+.endmacro
+
+.macro set_oam_attr arg, val
+        lda val
+        write_oam_attr arg
+.endmacro
+
+.macro set_oam_x arg, val
+        lda val
+        write_oam_x arg
+.endmacro
+
 ; Latch the PPU address; mangles A
 .macro ppu_load_addr addr, addr_e
         bit PPUSTATUS
