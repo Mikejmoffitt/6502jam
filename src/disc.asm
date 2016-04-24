@@ -109,14 +109,7 @@ disc_movement:
 @checks_done:
         rts
 
-; ============================
-;  Render the disc on-screen
-; ============================
-disc_draw:
-        ; Increment disc animation counter
-        ldy disc_anim
-        iny
-        sty disc_anim
+bottom_mask_draw:       
         ; Mask bottom of playfield
         lda playfield_bottom
         sec
@@ -156,6 +149,16 @@ disc_draw:
         write_oam_attr 6
         write_oam_attr 7
         write_oam_attr 8
+        rts
+
+; ============================
+;  Render the disc on-screen
+; ============================
+disc_draw:
+        ; Increment disc animation counter
+        ldy disc_anim
+        iny
+        sty disc_anim
         ; Y position
         lda disc_y+1
         sec
@@ -166,25 +169,16 @@ disc_draw:
         adc #$08
         write_oam_y (DISC_SPR_NUM + 2)
         write_oam_y (DISC_SPR_NUM + 3)
-
-        ; X position
-        lda disc_x+1
-        write_oam_x DISC_SPR_NUM
-        write_oam_x (DISC_SPR_NUM + 2)
-        clc
-        adc #$08
-        write_oam_x (DISC_SPR_NUM + 1)
-        write_oam_x (DISC_SPR_NUM + 3)
         
         ; Tile selection
         lda disc_anim
-        ;and #$0001000
-        ;bne @secondhalf_anim
+        and #%0001000
+        bne @firsthalf_anim
+        jmp @secondhalf_anim
 
 @firsthalf_anim:
         lda disc_anim
-        and #%0001100
-        lsr
+        and #%0000110
 
         write_oam_tile DISC_SPR_NUM
         clc
@@ -196,14 +190,71 @@ disc_draw:
         clc
         adc #$01
         write_oam_tile DISC_SPR_NUM + 3
-@secondhalf_anim:
-    
-        ; Attributes
+
         lda #%00000000                  ; Unflipped
         write_oam_attr DISC_SPR_NUM
         write_oam_attr DISC_SPR_NUM + 1
         write_oam_attr DISC_SPR_NUM + 2
         write_oam_attr DISC_SPR_NUM + 3
+
+        ; X position
+        lda disc_x+1
+        write_oam_x DISC_SPR_NUM
+        write_oam_x (DISC_SPR_NUM + 2)
+        clc
+        adc #$08
+        write_oam_x (DISC_SPR_NUM + 1)
+        write_oam_x (DISC_SPR_NUM + 3)
+
+        jmp @postanim
+
+@secondhalf_anim:
+        lda disc_anim
+        and #%0000110
+        lsr
+        sta temp
+        lda #$03
+        sec
+        sbc temp
+        asl
+
+        write_oam_tile DISC_SPR_NUM + 1
+        clc
+        adc #$01
+        write_oam_tile DISC_SPR_NUM
+        clc
+        adc #$0F
+        write_oam_tile DISC_SPR_NUM + 3
+        clc
+        adc #$01
+        write_oam_tile DISC_SPR_NUM + 2
+        lda #%01000000                  ; Flipped
+        write_oam_attr DISC_SPR_NUM
+        write_oam_attr DISC_SPR_NUM + 1
+        write_oam_attr DISC_SPR_NUM + 2
+        write_oam_attr DISC_SPR_NUM + 3
+
+        ; X position
+        lda disc_x+1
+        sec
+        sbc #$03
+        write_oam_x DISC_SPR_NUM
+        write_oam_x (DISC_SPR_NUM + 2)
+        clc
+        adc #$08
+        write_oam_x (DISC_SPR_NUM + 1)
+        write_oam_x (DISC_SPR_NUM + 3)
+
+
+@postanim:
+        
+
+
+
+
+
+
+        ; Attributes
         lda frame_counter
         and #%00000001
         beq @noshadow
@@ -229,8 +280,16 @@ disc_draw:
         write_oam_x DISC_SPR_NUM + 6
         clc
         adc #$08
+        bcs :+                          ; Check if sprite has wrapped around
         write_oam_x DISC_SPR_NUM + 5
         write_oam_x DISC_SPR_NUM + 7
+        clc
+        bcc :++
+:
+        lda #$FE                        ; Hide the sprite if it's wrapped
+        write_oam_y DISC_SPR_NUM + 5
+        write_oam_y DISC_SPR_NUM + 7
+:
 
         ; Shadow tile
         set_oam_tile DISC_SPR_NUM + 4, #$08

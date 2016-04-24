@@ -190,9 +190,9 @@ playfield_init:
         ppu_write_32kbit gfx1 + $1000, #$10
         ppu_load_full_palette palettes+$00
 
-        lda #$0F
+        lda #$07
         sta playfield_left
-        lda #$f0
+        lda #$f9
         sta playfield_right
         lda #$50
         sta playfield_top
@@ -225,23 +225,6 @@ main_entry:
         bank_load #$0E
         jsr disc_movement
 
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
-        jsr disc_draw
         jsr disc_draw
 ; Graphics updates
         ; Enable emphasis to test performance
