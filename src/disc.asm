@@ -263,8 +263,13 @@ disc_draw:
         write_oam_y DISC_SPR_NUM + 5
         clc
         adc #$08
+        cmp #(PLAYFIELD_Y + 6)
+        bpl @shadow_bottom
+        lda #$FE
+@shadow_bottom:
         write_oam_y DISC_SPR_NUM + 6
         write_oam_y DISC_SPR_NUM + 7
+
         
         ; Shadow X
         lda disc_x+1
@@ -292,7 +297,7 @@ disc_draw:
         set_oam_tile DISC_SPR_NUM + 7, #$19
 
         ; Shadow attr
-        lda #$00
+        lda #$03                         ; Palette 3
         write_oam_attr DISC_SPR_NUM + 4
         write_oam_attr DISC_SPR_NUM + 5
         write_oam_attr DISC_SPR_NUM + 6
