@@ -7,13 +7,15 @@
 
 DISC_H = $0e
 DISC_W = $0c
+DISC_MAX_Z = $1c
 DISC_SPR_NUM = 10
-DISC_SHADOW_OFF_X = 2
-DISC_SHADOW_OFF_Y = 4
+DISC_SHADOW_SPR_NUM = 50
 
 disc_movement:
         key_down pad_2, btn_start
         lda #$00
+        sta disc_dz
+        sta disc_dz+1
         sta disc_dy
         sta disc_dy+1
         sta disc_dx
@@ -31,10 +33,19 @@ disc_movement:
         key_isdown pad_2, btn_right
         add16 disc_dx, #$08
 :
+        key_isdown pad_2, btn_a
+        add16 disc_dz, #$10
+:
+        key_isdown pad_2, btn_b
+        sub16 disc_dz, #$10
+:
 
+
+        sub16 disc_dz, #$03
         ; Apply vectors
         sum16 disc_x, disc_dx
         sum16 disc_y, disc_dy
+        sum16 disc_z, disc_dz
 
         ldx #$00
 
@@ -89,21 +100,21 @@ disc_movement:
         clc
         adc #(DISC_W/2)
         cmp disc_x+1
-        bcc @checks_done
+        bcc @xy_done
 
         sta disc_x+1
         stx disc_x
         stx disc_dx+1
         stx disc_dx
 
-        jmp @checks_done
+        jmp @xy_done
 
 @moving_rightwards:
         lda disc_x+1
         clc
         adc #(DISC_W/2)                     ;Offset by width of disc
         cmp playfield_right
-        bcc @checks_done
+        bcc @xy_done
         lda playfield_right
         sec
         sbc #(DISC_W/2)                     ;         
@@ -112,14 +123,35 @@ disc_movement:
         stx disc_dx+1
         stx disc_dx  
 
-@checks_done:
+@xy_done:
+        lda disc_z+1
+        bmi @clamp_z
+        cmp #DISC_MAX_Z
+        bpl @clamp_z_hi
+        rts
+@clamp_z:
+        lda #$00
+        sta disc_z
+        sta disc_z+1
+        sta disc_dz
+        sta disc_dz+1
+        sta disc_dx
+        sta disc_dx+1
+        sta disc_dy
+        sta disc_dy+1
+        rts
+@clamp_z_hi:
+        lda #DISC_MAX_Z
+        sta disc_z+1
+        lda #$00
+        sta disc_z
+        sta disc_dz
+        sta disc_dz+1
         rts
 
 disc_bottom_mask_draw:       
         ; Mask bottom of playfield
-        lda playfield_bottom
-        sec
-        sbc #$07
+        lda #$cf
         write_oam_y 1
         write_oam_y 2
         write_oam_y 3
@@ -161,6 +193,11 @@ disc_bottom_mask_draw:
 ;  Render the disc on-screen
 ; ============================
 disc_draw:
+        
+
+        lda #%00000000                  ; Attributes defaults
+        sta temp
+        sta temp2
         ; Increment disc animation counter
         ldy disc_anim
         iny
@@ -169,16 +206,39 @@ disc_draw:
         lda disc_y+1
         sec
         sbc #((DISC_H/2)+1)
+        sbc disc_z+1
+
+                                        ; Determine if it should be behind BG
+        cmp #$d0
+        bcc @disc_top
+        pha
+        lda #%00100000
+        sta temp                        ; Behind BG storage
+        pla
+
+@disc_top:
         write_oam_y DISC_SPR_NUM
         write_oam_y (DISC_SPR_NUM + 1)
         clc
         adc #$08
+        
+        cmp #$d0
+        bcc @disc_bottom
+
+        pha
+        lda #%00100000
+        sta temp2
+        pla
+        
+@disc_bottom:
         write_oam_y (DISC_SPR_NUM + 2)
         write_oam_y (DISC_SPR_NUM + 3)
         
+@tile_sel:
         ; Tile selection
         lda disc_anim
         and #%0001000
+
         bne @firsthalf_anim
         jmp @secondhalf_anim
 
@@ -198,8 +258,11 @@ disc_draw:
         write_oam_tile DISC_SPR_NUM + 3
 
         lda #%00000000                  ; Unflipped
+        ora temp
         write_oam_attr DISC_SPR_NUM
         write_oam_attr DISC_SPR_NUM + 1
+        lda #%00000000
+        ora temp2
         write_oam_attr DISC_SPR_NUM + 2
         write_oam_attr DISC_SPR_NUM + 3
 
@@ -217,6 +280,7 @@ disc_draw:
         jmp @postanim
 
 @secondhalf_anim:
+        ldy temp
         lda disc_anim
         and #%0000110
         lsr
@@ -225,6 +289,7 @@ disc_draw:
         sec
         sbc temp
         asl
+        sty temp
 
         write_oam_tile DISC_SPR_NUM + 1
         clc
@@ -237,8 +302,11 @@ disc_draw:
         adc #$01
         write_oam_tile DISC_SPR_NUM + 2
         lda #%01000000                  ; Flipped
+        ora temp
         write_oam_attr DISC_SPR_NUM
         write_oam_attr DISC_SPR_NUM + 1
+        lda #%01000000
+        ora temp2
         write_oam_attr DISC_SPR_NUM + 2
         write_oam_attr DISC_SPR_NUM + 3
 
@@ -253,75 +321,71 @@ disc_draw:
         write_oam_x (DISC_SPR_NUM + 1)
         write_oam_x (DISC_SPR_NUM + 3)
 
+        jmp @postanim
+
+@nobottomdisc:
+        ; Hide the shadow sprite entirely
+        lda #$FF
+        write_oam_y DISC_SPR_NUM+2
+        write_oam_y DISC_SPR_NUM+3 
+
+        rts
+
+
 
 @postanim:
         ; Drawing the shadow every other frame
         lda frame_counter
         and #%00000001
-        beq @noshadow
+        beq @doshadow
         
         ; Every other frame, a shadow is drawn with sprites 5-8
         ; Shadow Y
         lda disc_y+1
-        clc
-        adc #(DISC_SHADOW_OFF_Y-1)
         sec
         sbc #(DISC_H/2)
-        write_oam_y DISC_SPR_NUM + 4
-        write_oam_y DISC_SPR_NUM + 5
         clc
-        adc #$08
-        cmp #(PLAYFIELD_Y + 6)
-        bpl @shadow_bottom
-        lda #$FE                        ; Hide the bottom of the shadow if it
-                                        ; was going to show through the fence.
-@shadow_bottom:
-        write_oam_y DISC_SPR_NUM + 6
-        write_oam_y DISC_SPR_NUM + 7
+        adc #$06
+        cmp #$d0
+        bcc @doshadow
+
+        lda #$FF
+        write_oam_y DISC_SHADOW_SPR_NUM
+        write_oam_y DISC_SHADOW_SPR_NUM+1
+        rts
+@doshadow:
+        write_oam_y DISC_SHADOW_SPR_NUM
+        write_oam_y DISC_SHADOW_SPR_NUM+1
 
         
         ; Shadow X
-        lda disc_x+1
+        lda disc_z+1
+        lsr
         clc
-        adc #DISC_SHADOW_OFF_X
+        adc disc_x+1
         sec
         sbc #(DISC_W/2)
-        write_oam_x DISC_SPR_NUM + 4
-        write_oam_x DISC_SPR_NUM + 6
+        write_oam_x DISC_SHADOW_SPR_NUM
         clc
-        adc #$08
+        adc #$05
         bcs :+                          ; Check if sprite has wrapped around
-        write_oam_x DISC_SPR_NUM + 5
-        write_oam_x DISC_SPR_NUM + 7
+        write_oam_x DISC_SHADOW_SPR_NUM+1
         clc
         bcc :++
 :
         lda #$FE                        ; Hide the sprite if it's wrapped
-        write_oam_y DISC_SPR_NUM + 5
-        write_oam_y DISC_SPR_NUM + 7
+        write_oam_y DISC_SHADOW_SPR_NUM
+        write_oam_y DISC_SHADOW_SPR_NUM+1
 :
 
         ; Shadow tile
-        set_oam_tile DISC_SPR_NUM + 4, #$08
-        set_oam_tile DISC_SPR_NUM + 5, #$09
-        set_oam_tile DISC_SPR_NUM + 6, #$18
-        set_oam_tile DISC_SPR_NUM + 7, #$19
+        lda #$08
+        write_oam_tile DISC_SHADOW_SPR_NUM
+        write_oam_tile DISC_SHADOW_SPR_NUM+1
 
         ; Shadow attr
         lda #$03                         ; Palette 3
-        write_oam_attr DISC_SPR_NUM + 4
-        write_oam_attr DISC_SPR_NUM + 5
-        write_oam_attr DISC_SPR_NUM + 6
-        write_oam_attr DISC_SPR_NUM + 7
+        write_oam_attr DISC_SHADOW_SPR_NUM
+        ora #%01000000
+        write_oam_attr DISC_SHADOW_SPR_NUM+1
         rts
-
-@noshadow:
-        ; Hide the shadow sprite entirely
-        lda #$FE
-        write_oam_y DISC_SPR_NUM + 4
-        write_oam_y DISC_SPR_NUM + 5 
-        write_oam_y DISC_SPR_NUM + 6
-        write_oam_y DISC_SPR_NUM + 7
-
-        rts
-

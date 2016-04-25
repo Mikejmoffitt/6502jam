@@ -5,7 +5,7 @@ PLAYER_H = $20
 
 PLAYER_SPR_NUM = 18 
 
-PLAYER_OFFSET = $0a
+PLAYER_OFFSET = $0e
 
 PLAYER_DIR_RIGHT = $00
 PLAYER_DIR_LEFT = $01
@@ -19,6 +19,8 @@ PLAYER_NUMOFF = $08
 PLAYER_DIROFF = $09
 PLAYER_SLIDE_CNTOFF = $0a
 PLAYER_BLOCK_CNTOFF = $0b
+PLAYER_SPR_NUMOFF = $0c
+PLAYER_ANIM_FRAMEOFF = $0d
 
 ; Animation mapping constant data
 ; Four bytes follow the mapping of what goes into OAM
@@ -41,19 +43,64 @@ player_mapping_stand:
         .byte   $FF, $53, %00000010, 0
         .byte   $FF, $54, %00000010, 0
 
-players_draw:
+player_draw_shadow:
+        
+        rts
+
+players_draw:      
 
         key_isdown pad_1, btn_left
         lda #$01
-        sta player_state + PLAYER_DIROFF, x
+        sta player_state + PLAYER_DIROFF
 :
 
         key_isdown pad_1, btn_right
         lda #$00
-        sta player_state + PLAYER_DIROFF, x
+        sta player_state + PLAYER_DIROFF
 :
 
-        lda #PLAYER_SPR_NUM                     ; Load base player sprite #
+; Set some sprite base numbers
+        lda #PLAYER_SPR_NUM
+        sta player_state + PLAYER_SPR_NUMOFF
+
+        lda #PLAYER_SPR_NUM+16
+        sta player_state + PLAYER_SPR_NUMOFF + PLAYER_OFFSET
+
+        ;ldx #$00
+        ;lda frame_counter
+        ;and #%00000001
+        ;beq @x0_first
+        ;ldx #PLAYER_OFFSET
+
+;@x0_first:
+
+        ldx #$00
+        lda #<player_mapping_stand
+        sta addr_ptr              
+        lda #>player_mapping_stand
+        sta addr_ptr+1
+        jsr player_draw
+
+        ;cpx #$00
+        ;bne @xoffset
+        ;ldx #$00
+        ;jmp @otherplayer
+@xoffset:
+        ;ldx #PLAYER_OFFSET
+@otherplayer:
+        ldx #PLAYER_OFFSET
+        lda #<player_mapping_stand
+        sta addr_ptr                            
+        lda #>player_mapping_stand
+        sta addr_ptr+1
+
+        jsr player_draw
+        rts
+
+player_draw:
+
+
+        lda player_state + PLAYER_SPR_NUMOFF, x 
         asl                                     ; * 2
         asl                                     ; * 2
         tay                                     ; Y = index into OAM table
@@ -61,11 +108,6 @@ players_draw:
         clc
         adc #$30                                
         sta temp                                ; Y base case
-
-        lda #<player_mapping_stand              ; Load addr_ptr with address 
-        sta addr_ptr                            ; of the 
-        lda #>player_mapping_stand
-        sta addr_ptr+1
 
         sty temp2                               ; OAM index offset
         sub16 addr_ptr, temp2                   ; Subtract to correct for Y off

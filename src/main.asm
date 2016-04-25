@@ -4,8 +4,8 @@
 .include "resourcebanks.asm"
 .include "ram.asm"
 
-PLAYFIELD_HEIGHT = $8c
-PLAYFIELD_Y      = $4a
+PLAYFIELD_HEIGHT = $98
+PLAYFIELD_Y      = $50
 PLAYFIELD_WIDTH  = $ef
 PLAYFIELD_X      = $07
 
@@ -183,6 +183,12 @@ playfield_init:
         sta p1_y
         sta p1_y+1
 
+        lda #$90
+        sta p2_x
+        sta p2_x+1
+        sta p2_y
+        sta p2_y+1
+
         rts
 
 ; ============================ 
@@ -209,8 +215,8 @@ main_entry:
         jsr disc_movement
 
         jsr disc_draw
-        jsr disc_bottom_mask_draw
         jsr players_draw
+        jsr disc_bottom_mask_draw
 ; Graphics updates
         ; Enable emphasis to test performance
         lda ppumask_config
