@@ -337,7 +337,7 @@ disc_draw:
         ; Drawing the shadow every other frame
         lda frame_counter
         and #%00000001
-        beq @doshadow
+        bne @remove_shadow
         
         ; Every other frame, a shadow is drawn with sprites 5-8
         ; Shadow Y
@@ -348,7 +348,7 @@ disc_draw:
         adc #$06
         cmp #$d0
         bcc @doshadow
-
+@remove_shadow:
         lda #$FF
         write_oam_y DISC_SHADOW_SPR_NUM
         write_oam_y DISC_SHADOW_SPR_NUM+1
