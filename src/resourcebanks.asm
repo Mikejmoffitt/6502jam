@@ -14,4 +14,4 @@ gfx1:
 .segment "BANK1"
 
 field1_table:
-.incbin "assets/test1.nam"
+.incbin "assets/field1.nam"

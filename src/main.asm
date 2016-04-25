@@ -3,6 +3,11 @@
 .include "zeropage.asm"
 .include "resourcebanks.asm"
 
+PLAYFIELD_HEIGHT = $8c
+PLAYFIELD_Y      = $4a
+PLAYFIELD_WIDTH  = $ef
+PLAYFIELD_X      = $07
+
 .segment "RAM"
 
         vblank_flag:                            .res 1
@@ -33,6 +38,8 @@ game_state:
         playfield_bottom:                       .res 1
         playfield_left:                         .res 1
         playfield_right:                        .res 1
+
+
 
 
 .segment "BANKF"
@@ -190,13 +197,13 @@ playfield_init:
         ppu_write_32kbit gfx1 + $1000, #$10
         ppu_load_full_palette palettes+$00
 
-        lda #$07
+        lda #PLAYFIELD_X
         sta playfield_left
-        lda #$f9
+        lda #(PLAYFIELD_X + PLAYFIELD_WIDTH)
         sta playfield_right
-        lda #$50
+        lda #PLAYFIELD_Y
         sta playfield_top
-        lda #$d0
+        lda #(PLAYFIELD_Y + PLAYFIELD_HEIGHT)
         sta playfield_bottom
 
         lda #$80
@@ -226,6 +233,7 @@ main_entry:
         jsr disc_movement
 
         jsr disc_draw
+        jsr disc_bottom_mask_draw
 ; Graphics updates
         ; Enable emphasis to test performance
         lda ppumask_config
@@ -248,6 +256,7 @@ main_entry:
 ; Some gameplay code goes here
 .segment "BANKE"
 .include "disc.asm"
+.include "player.asm"
 
 .segment "VECTORS"
 

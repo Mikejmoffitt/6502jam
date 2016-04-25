@@ -8,6 +8,8 @@
 DISC_H = $0e
 DISC_W = $0c
 DISC_SPR_NUM = 10
+DISC_SHADOW_OFF_X = 2
+DISC_SHADOW_OFF_Y = 4
 
 disc_movement:
         key_down pad_1, btn_start
@@ -109,11 +111,11 @@ disc_movement:
 @checks_done:
         rts
 
-bottom_mask_draw:       
+disc_bottom_mask_draw:       
         ; Mask bottom of playfield
         lda playfield_bottom
         sec
-        sbc #$01
+        sbc #$07
         write_oam_y 1
         write_oam_y 2
         write_oam_y 3
@@ -247,24 +249,16 @@ disc_draw:
 
 
 @postanim:
-        
-
-
-
-
-
-
-        ; Attributes
+        ; Drawing the shadow every other frame
         lda frame_counter
         and #%00000001
         beq @noshadow
-
         
         ; Every other frame, a shadow is drawn with sprites 5-8
         ; Shadow Y
         lda disc_y+1
         clc
-        adc #$03
+        adc #DISC_SHADOW_OFF_Y
         write_oam_y DISC_SPR_NUM + 4
         write_oam_y DISC_SPR_NUM + 5
         clc
@@ -275,7 +269,7 @@ disc_draw:
         ; Shadow X
         lda disc_x+1
         clc
-        adc #$02
+        adc #DISC_SHADOW_OFF_X
         write_oam_x DISC_SPR_NUM + 4
         write_oam_x DISC_SPR_NUM + 6
         clc
