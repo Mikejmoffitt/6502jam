@@ -7,104 +7,51 @@ wait_nmi:
 
 ; Controller reading code from NESDev
 ; Out: A=buttons pressed, where bit 0 is A button
-read_joy_1:
+read_joypads:
         ; Strobe controller
         lda #1
         sta $4016
-        lda #0
+        sta pad_2
+        lsr a
         sta $4016
-        
-        ; Read all 8 buttons
-        ldx #8
 :
-        pha
-        
-        ; Read next button state and mask off low 2 bits.
-        ; Compare with $01, which will set carry flag if
-        ; either or both bits are set.
         lda $4016
         and #$03
         cmp #$01
-        
-        ; Now, rotate the carry flag into the top of A,
-        ; land shift all the other buttons to the right
-        pla
-        ror a
-        
-        dex
-        bne :-
-        
-        rts
-
-; temp is a zero-page variable
-
-; Reads controller. Reliable when DMC is playing.
-; Out: A=buttons held, A button in bit 0
-read_joy_safe_1:
-        ; Get first reading
-        jsr read_joy_1
-:
-        ; Save previous reading
-        sta temp
-        
-        ; Read again and compare. If they differ,
-        ; read again.
-        jsr read_joy_1
-        cmp temp
-        bne :-
-        ldx pad_1
-        stx pad_1_prev
-        sta pad_1
-        rts
-
-; Controller reading code from NESDev
-; Out: A=buttons pressed, where bit 0 is A button
-read_joy_2:
-        ; Strobe controller
-        lda #1
-        sta $4017
-        lda #0
-        sta $4017
-        
-        ; Read all 8 buttons
-        ldx #8
-:
-        pha
-        
-        ; Read next button state and mask off low 2 bits.
-        ; Compare with $01, which will set carry flag if
-        ; either or both bits are set.
+        rol pad_1
         lda $4017
         and #$03
         cmp #$01
-        
-        ; Now, rotate the carry flag into the top of A,
-        ; land shift all the other buttons to the right
-        pla
-        ror a
-        
-        dex
-        bne :-
-        
+        rol pad_2
+        bcc :-
         rts
 
 ; temp is a zero-page variable
 
 ; Reads controller. Reliable when DMC is playing.
 ; Out: A=buttons held, A button in bit 0
-read_joy_safe_2:
+read_joy_safe:
+        ; Back up previous ones for edge comparisons
+        lda pad_1
+        sta pad_1_prev
+        lda pad_2
+        sta pad_2_prev
         ; Get first reading
-        jsr read_joy_2
+        jsr read_joypads
 :
         ; Save previous reading
+        lda pad_1
         sta temp
+        lda pad_2
+        sta temp2
         
         ; Read again and compare. If they differ,
         ; read again.
-        jsr read_joy_2
+        jsr read_joypads
+        lda pad_1
         cmp temp
         bne :-
-        ldx pad_2
-        stx pad_2_prev
-        sta pad_2
+        lda pad_2
+        cmp temp2
+        bne :-
         rts

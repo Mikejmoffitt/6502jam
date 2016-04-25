@@ -10,18 +10,18 @@ PPUDATA         = $2007
 OAMDMA          = $4014
 DMCFREQ         = $4010
 
-BUTTON_A        = %00000001
-BUTTON_B        = %00000010
-BUTTON_SEL      = %00000100
-BUTTON_START    = %00001000
-BUTTON_UP       = %00010000
-BUTTON_DOWN     = %00100000
-BUTTON_LEFT     = %01000000
-BUTTON_RIGHT    = %10000000
+BUTTON_A        = %10000000
+BUTTON_B        = %01000000
+BUTTON_SEL      = %00100000
+BUTTON_START    = %00010000
+BUTTON_UP       = %00001000
+BUTTON_DOWN     = %00000100
+BUTTON_LEFT     = %00000010
+BUTTON_RIGHT    = %00000001
 
 OAM_BASE        = $200
 
-; OAM Acess macros
+; OAM Access macros
 .macro write_oam_y arg
         sta OAM_BASE+((arg) << 2)
 .endmacro

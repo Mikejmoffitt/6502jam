@@ -2,44 +2,12 @@
 .include "cool_macros.asm"
 .include "zeropage.asm"
 .include "resourcebanks.asm"
+.include "ram.asm"
 
 PLAYFIELD_HEIGHT = $8c
 PLAYFIELD_Y      = $4a
 PLAYFIELD_WIDTH  = $ef
 PLAYFIELD_X      = $07
-
-.segment "RAM"
-
-        vblank_flag:                            .res 1
-        frame_counter:                          .res 1
-        ppuctrl_config:                         .res 1
-        ppumask_config:                         .res 1
-        xscroll:                                .res 2
-        yscroll:                                .res 2
-
-button_table:
-        btn_a:                                  .res 1
-        btn_b:                                  .res 1
-        btn_sel:                                .res 1
-        btn_start:                              .res 1
-        btn_up:                                 .res 1
-        btn_down:                               .res 1
-        btn_left:                               .res 1
-        btn_right:                              .res 1
-
-pad_data:
-        pad_1:                                  .res 1
-        pad_1_prev:                             .res 1
-        pad_2:                                  .res 1
-        pad_2_prev:                             .res 1
-
-game_state:
-        playfield_top:                          .res 1
-        playfield_bottom:                       .res 1
-        playfield_left:                         .res 1
-        playfield_right:                        .res 1
-
-
 
 
 .segment "BANKF"
@@ -146,12 +114,12 @@ reset_vector:
         bne @clrmem
 
 ; Make controller comparison table
-        lda #$01
+        lda #$80
         ldx #$00
 @build_controller_table:
         sta button_table, x
         inx
-        rol a
+        lsr
         bne @build_controller_table
 ; One more vblank
 @waitvbl2:
@@ -209,6 +177,11 @@ playfield_init:
         lda #$80
         sta disc_y+1
         sta disc_x+1
+        lda #$60
+        sta p1_x
+        sta p1_x+1
+        sta p1_y
+        sta p1_y+1
 
         rts
 
@@ -227,13 +200,17 @@ main_entry:
         ppu_enable
 @toploop:
 ; Logic Updates
-        jsr read_joy_safe_1
-        jsr read_joy_safe_2
+        jsr read_joy_safe
+
+
+; Disc and player logic are in bank E
         bank_load #$0E
+
         jsr disc_movement
 
         jsr disc_draw
         jsr disc_bottom_mask_draw
+        jsr players_draw
 ; Graphics updates
         ; Enable emphasis to test performance
         lda ppumask_config

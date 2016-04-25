@@ -12,23 +12,23 @@ DISC_SHADOW_OFF_X = 2
 DISC_SHADOW_OFF_Y = 4
 
 disc_movement:
-        key_down pad_1, btn_start
+        key_down pad_2, btn_start
         lda #$00
         sta disc_dy
         sta disc_dy+1
         sta disc_dx
         sta disc_dx+1
 :
-        key_isdown pad_1, btn_up
+        key_isdown pad_2, btn_up
         sub16 disc_dy, #$08
 :
-        key_isdown pad_1, btn_down
+        key_isdown pad_2, btn_down
         add16 disc_dy, #$08
 :
-        key_isdown pad_1, btn_left
+        key_isdown pad_2, btn_left
         sub16 disc_dx, #$08
 :
-        key_isdown pad_1, btn_right
+        key_isdown pad_2, btn_right
         add16 disc_dx, #$08
 :
 
@@ -44,6 +44,8 @@ disc_movement:
 
         ; Top
         lda playfield_top
+        clc
+        adc #(DISC_H/2)
         cmp disc_y+1
         bcc @h_check                            
         sta disc_y+1                    ; Clamp disc Y to top of playfield
@@ -55,12 +57,12 @@ disc_movement:
         ; Bottom
         lda disc_y+1
         clc
-        adc #DISC_H                     ; Offset by height of disc
+        adc #(DISC_H/2)                     ; Offset by height of disc
         cmp playfield_bottom
         bcc @h_check       
         lda playfield_bottom
         sec
-        sbc #DISC_H                     ;
+        sbc #(DISC_H/2)                     ;
         sta disc_y+1                    ; Clamp disc Y to top of playfield
         stx disc_y                      ;
         jmp @flip_dy                    ; Invert dY
@@ -84,6 +86,8 @@ disc_movement:
 
         ; Left bound first
         lda playfield_left
+        clc
+        adc #(DISC_W/2)
         cmp disc_x+1
         bcc @checks_done
 
@@ -97,12 +101,12 @@ disc_movement:
 @moving_rightwards:
         lda disc_x+1
         clc
-        adc #DISC_W                     ;Offset by width of disc
+        adc #(DISC_W/2)                     ;Offset by width of disc
         cmp playfield_right
         bcc @checks_done
         lda playfield_right
         sec
-        sbc #DISC_W                     ;         
+        sbc #(DISC_W/2)                     ;         
         sta disc_x+1                    ;X clamping
         stx disc_x
         stx disc_dx+1
@@ -164,7 +168,7 @@ disc_draw:
         ; Y position
         lda disc_y+1
         sec
-        sbc #$01
+        sbc #((DISC_H/2)+1)
         write_oam_y DISC_SPR_NUM
         write_oam_y (DISC_SPR_NUM + 1)
         clc
@@ -201,6 +205,8 @@ disc_draw:
 
         ; X position
         lda disc_x+1
+        sec
+        sbc #(DISC_W/2)
         write_oam_x DISC_SPR_NUM
         write_oam_x (DISC_SPR_NUM + 2)
         clc
@@ -239,7 +245,7 @@ disc_draw:
         ; X position
         lda disc_x+1
         sec
-        sbc #$03
+        sbc #((DISC_W/2)+03)
         write_oam_x DISC_SPR_NUM
         write_oam_x (DISC_SPR_NUM + 2)
         clc
@@ -258,14 +264,17 @@ disc_draw:
         ; Shadow Y
         lda disc_y+1
         clc
-        adc #DISC_SHADOW_OFF_Y
+        adc #(DISC_SHADOW_OFF_Y-1)
+        sec
+        sbc #(DISC_H/2)
         write_oam_y DISC_SPR_NUM + 4
         write_oam_y DISC_SPR_NUM + 5
         clc
         adc #$08
         cmp #(PLAYFIELD_Y + 6)
         bpl @shadow_bottom
-        lda #$FE
+        lda #$FE                        ; Hide the bottom of the shadow if it
+                                        ; was going to show through the fence.
 @shadow_bottom:
         write_oam_y DISC_SPR_NUM + 6
         write_oam_y DISC_SPR_NUM + 7
@@ -275,6 +284,8 @@ disc_draw:
         lda disc_x+1
         clc
         adc #DISC_SHADOW_OFF_X
+        sec
+        sbc #(DISC_W/2)
         write_oam_x DISC_SPR_NUM + 4
         write_oam_x DISC_SPR_NUM + 6
         clc
