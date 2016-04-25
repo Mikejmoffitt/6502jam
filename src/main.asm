@@ -177,17 +177,21 @@ playfield_init:
         lda #$80
         sta disc_y+1
         sta disc_x+1
-        lda #$60
+        lda #$20
         sta p1_x
         sta p1_x+1
+        lda #$D8
+        sta p2_x
+        sta p2_y
+
+        lda #$88
         sta p1_y
         sta p1_y+1
-
-        lda #$90
-        sta p2_x
-        sta p2_x+1
         sta p2_y
         sta p2_y+1
+
+        lda #$01
+        sta p2_dir
 
         rts
 
