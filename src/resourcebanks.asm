@@ -1,4 +1,4 @@
-; Some banks mostly contain data rather than code.
+;Some banks mostly contain data rather than code.
 
 
 ; Palettes and CHR

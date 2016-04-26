@@ -1,4 +1,5 @@
 
+.include "../assets/cmaps/girl.asm"
 
 PLAYER_W = $18
 PLAYER_H = $20
@@ -21,49 +22,6 @@ PLAYER_SLIDE_CNTOFF = $0a
 PLAYER_BLOCK_CNTOFF = $0b
 PLAYER_SPR_NUMOFF = $0c
 PLAYER_ANIM_FRAMEOFF = $0d
-
-; Animation mapping constant data
-; Four bytes follow the mapping of what goes into OAM, mostly
-;       Sprite Y (relative to player's Y), signed; set to $FF to end the frame
-;       Tile selection
-;       Attributes; if bit 1 is set, then bit 0 will be set for player 2
-;       Sprite X (relative to player's X), signed; flipped to face left
-; Twelve sprites are allocated for a frame.
-player_mapping_stand:
-        .byte   <-32, $22, %00000001, <-4
-        .byte   <-32, $21, %00000001, 4
-        .byte   <-24, $32, %00000001, <-4
-        .byte   <-24, $33, %00000001, 4
-        .byte   <-16, $43, %00000010, <-4
-        .byte   <-16, $44, %00000010, 4
-        .byte   <-8, $53, %00000010, <-4
-        .byte   <-8, $54, %00000010, 4
-        .byte   $FF
-
-player_mapping_run1:
-        .byte   <-33, $20, %00000001, <-4
-        .byte   <-33, $21, %00000001, 4
-        .byte   <-25, $30, %00000001, <-4
-        .byte   <-25, $31, %00000001, 4
-        .byte   <-17, $40, %00000010, <-6
-        .byte   <-17, $41, %00000010, 2
-        .byte   <-9, $50, %00000010, <-8
-        .byte   <-9, $51, %00000010, 0
-        .byte   <-9, $52, %00000010, 7
-        .byte   $FF
-
-player_mapping_run2:
-        .byte   <-33, $24, %00000001, <-4
-        .byte   <-33, $21, %00000001, 4
-        .byte   <-25, $34, %00000001, <-4
-        .byte   <-25, $35, %00000001, 4
-        .byte   <-17, $42, %00000010, <-6
-        .byte   <-17, $23, %00000010, 2
-        .byte   <-9, $50, %00000010, <-8
-        .byte   <-9, $51, %00000010, 0
-        .byte   <-9, $52, %00000010, 7
-        .byte   $FF
-
 
 ; Have players respond to gamepad input
 ; Pre-entry conditions:
@@ -124,23 +82,23 @@ players_draw:
         and #%00010000
         beq @load_f1
 @load_f2:
-        lda #<player_mapping_run2
+        lda #<girl_mapping_down2
         sta addr_ptr              
-        lda #>player_mapping_run2
+        lda #>girl_mapping_down2
         sta addr_ptr+1
         jmp @draw
 
 @load_f1:
-        lda #<player_mapping_run1
+        lda #<girl_mapping_down1
         sta addr_ptr              
-        lda #>player_mapping_run1
+        lda #>girl_mapping_down1
         sta addr_ptr+1
         jmp @draw
 
 @load_f0:
-        lda #<player_mapping_stand
+        lda #<girl_mapping_down0
         sta addr_ptr              
-        lda #>player_mapping_stand
+        lda #>girl_mapping_down0
         sta addr_ptr+1
 @draw:
 
@@ -148,9 +106,9 @@ players_draw:
 
 @otherplayer:
         ldx #PLAYER_OFFSET
-        lda #<player_mapping_run2
+        lda #<girl_mapping_down2
         sta addr_ptr                            
-        lda #>player_mapping_run2
+        lda #>girl_mapping_down2
         sta addr_ptr+1
 
         jsr player_draw
@@ -212,7 +170,7 @@ player_draw:
         rol a
         rol a
         rol a
-        ora player_state + PLAYER_DIROFF, x     ; X flip
+        eor player_state + PLAYER_DIROFF, x     ; X flip
         ror a
         ror a
         ror a
@@ -236,7 +194,7 @@ player_draw:
 @noflipx:
         lda (addr_ptr), y                       ; X pos relative to player
         clc                                     ; Add one to X offset
-        adc player_state + PLAYER_XOFF + 1, x       ; Offset from player's X center
+        adc player_state + PLAYER_XOFF + 1, x   ; Offset from player's X center
         sta OAM_BASE, y
         iny
        

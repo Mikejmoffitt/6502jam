@@ -4,7 +4,7 @@
 .include "resourcebanks.asm"
 .include "ram.asm"
 
-PLAYFIELD_HEIGHT = $98
+PLAYFIELD_HEIGHT = $9f
 PLAYFIELD_Y      = $50
 PLAYFIELD_WIDTH  = $ef
 PLAYFIELD_X      = $07
