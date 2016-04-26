@@ -217,7 +217,8 @@ main_entry:
         bank_load #$0E
 
         jsr disc_movement
-
+        jsr player_handle_input
+       
         jsr disc_draw
         jsr players_draw
         jsr disc_bottom_mask_draw

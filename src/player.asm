@@ -23,8 +23,8 @@ PLAYER_SPR_NUMOFF = $0c
 PLAYER_ANIM_FRAMEOFF = $0d
 
 ; Animation mapping constant data
-; Four bytes follow the mapping of what goes into OAM
-;       Sprite Y (relative to player's Y), signed; set to $FF to make it unused
+; Four bytes follow the mapping of what goes into OAM, mostly
+;       Sprite Y (relative to player's Y), signed; set to $FF to end the frame
 ;       Tile selection
 ;       Attributes; if bit 1 is set, then bit 0 will be set for player 2
 ;       Sprite X (relative to player's X), signed; flipped to face left
@@ -38,15 +38,34 @@ player_mapping_stand:
         .byte   0, $44, %00000010, 4
         .byte   8, $53, %00000010, <-4
         .byte   8, $54, %00000010, 4
-        .byte   $FF, $43, %00000010, 0
-        .byte   $FF, $44, %00000010, 0
-        .byte   $FF, $53, %00000010, 0
-        .byte   $FF, $54, %00000010, 0
+        .byte   $FF
 
+; Have players respond to gamepad input
+; Pre-entry conditions:
+;       X is loaded with the player struct offset
+player_handle_input:
+
+@handle_accel:
+        key_isdown pad_1, btn_up
+        sub16 p1_x, #$08
+:
+        key_isdown pad_1, btn_down
+        add16 p1_y, #$08
+:
+        key_isdown pad_1, btn_left
+        sub16 p1_x, #$08
+:
+        key_isdown pad_1, btn_right
+        add16 p1_x, #$08
+:
+        rts
+
+; Draws a shadow below the players, much like the disc has
 player_draw_shadow:
         
         rts
 
+; Responsible for drawing both players to the screen based on state structs.
 players_draw:      
 
         key_isdown pad_1, btn_left
@@ -66,13 +85,6 @@ players_draw:
         lda #PLAYER_SPR_NUM+16
         sta player_state + PLAYER_SPR_NUMOFF + PLAYER_OFFSET
 
-        ;ldx #$00
-        ;lda frame_counter
-        ;and #%00000001
-        ;beq @x0_first
-        ;ldx #PLAYER_OFFSET
-
-;@x0_first:
 
         ldx #$00
         lda #<player_mapping_stand
@@ -81,10 +93,6 @@ players_draw:
         sta addr_ptr+1
         jsr player_draw
 
-        ;cpx #$00
-        ;bne @xoffset
-        ;ldx #$00
-        ;jmp @otherplayer
 @xoffset:
         ;ldx #PLAYER_OFFSET
 @otherplayer:
@@ -97,8 +105,11 @@ players_draw:
         jsr player_draw
         rts
 
+; Draws a player to the screen; called by players_draw.
+; Pre-entry conditions:
+;       X is loaded with the player struct offset
+;       addr_ptr is loaded with the address of the animation frame struct.
 player_draw:
-
 
         lda player_state + PLAYER_SPR_NUMOFF, x 
         asl                                     ; * 2
@@ -126,9 +137,9 @@ player_draw:
 @oam_copy_loop:
                                                 ; Y = OAM Y position
         ; Y position
-        lda (addr_ptr), y                         ; Y pos relative to player
-        cmp #$FF                                ; Check "do not use" flag
-        beq @skip_yoff                         
+        lda (addr_ptr), y                       ; Y pos relative to player
+        cmp #$FF                                ; Check unused flag
+        beq @end_frame                          ; Y-Pos was $FF; terminate loop
         clc
         adc player_state + PLAYER_YOFF, x       ; Offset from player's Y center
         sta OAM_BASE, y
@@ -184,12 +195,12 @@ player_draw:
         
 ; This branch is for when a sprite is to be hidden so we can ignore everything
 ; other than the Y position
-@skip_yoff:
-        sta OAM_BASE, y
+@end_frame:
+        sta OAM_BASE, y                         ; Hide this sprite
         iny
         iny
         iny
         iny
-        cpy temp
-        bne @oam_copy_loop
+        cpy temp                                ; Hide all remaining sprites
+        bne @end_frame                          ; for this player.
         rts
