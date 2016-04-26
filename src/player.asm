@@ -30,15 +30,16 @@ PLAYER_ANIM_FRAMEOFF = $0d
 ;       Sprite X (relative to player's X), signed; flipped to face left
 ; Twelve sprites are allocated for a frame.
 player_mapping_stand:
-        .byte   <-16, $22, %00000001, <-4
-        .byte   <-16, $23, %00000001, 4
-        .byte   <-8, $32, %00000001, <-4
-        .byte   <-8, $33, %00000001, 4
-        .byte   0, $43, %00000010, <-4
-        .byte   0, $44, %00000010, 4
-        .byte   8, $53, %00000010, <-4
-        .byte   8, $54, %00000010, 4
+        .byte   <-32, $22, %00000001, <-4
+        .byte   <-32, $23, %00000001, 4
+        .byte   <-24, $32, %00000001, <-4
+        .byte   <-24, $33, %00000001, 4
+        .byte   <-16, $43, %00000010, <-4
+        .byte   <-16, $44, %00000010, 4
+        .byte   <-8, $53, %00000010, <-4
+        .byte   <-8, $54, %00000010, 4
         .byte   $FF
+
 
 ; Have players respond to gamepad input
 ; Pre-entry conditions:
@@ -47,16 +48,16 @@ player_handle_input:
 
 @handle_accel:
         key_isdown pad_1, btn_up
-        sub16 p1_x, #$08
+        sub16 p1_y, #$40
 :
         key_isdown pad_1, btn_down
-        add16 p1_y, #$08
+        add16 p1_y, #$40
 :
         key_isdown pad_1, btn_left
-        sub16 p1_x, #$08
+        sub16 p1_x, #$40
 :
         key_isdown pad_1, btn_right
-        add16 p1_x, #$08
+        add16 p1_x, #$40
 :
         rts
 
@@ -141,7 +142,7 @@ player_draw:
         cmp #$FF                                ; Check unused flag
         beq @end_frame                          ; Y-Pos was $FF; terminate loop
         clc
-        adc player_state + PLAYER_YOFF, x       ; Offset from player's Y center
+        adc player_state + PLAYER_YOFF + 1, x       ; Offset from player's Y center
         sta OAM_BASE, y
         iny                                     ; Y = OAM tile select
 
@@ -175,7 +176,7 @@ player_draw:
         lda #$00
         sbc (addr_ptr), y                       ; Reverse relative X position
         cld
-        adc player_state + PLAYER_XOFF, x       ; Offset from player's X center
+        adc player_state + PLAYER_XOFF + 1, x       ; Offset from player's X center
         sta OAM_BASE, y
         iny 
         cpy temp
@@ -185,7 +186,7 @@ player_draw:
 @noflipx:
         lda (addr_ptr), y                       ; X pos relative to player
         clc                                     ; Add one to X offset
-        adc player_state + PLAYER_XOFF, x       ; Offset from player's X center
+        adc player_state + PLAYER_XOFF + 1, x       ; Offset from player's X center
         sta OAM_BASE, y
         iny
        

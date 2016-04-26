@@ -178,20 +178,22 @@ playfield_init:
         sta disc_y+1
         sta disc_x+1
         lda #$20
-        sta p1_x
         sta p1_x+1
         lda #$D8
-        sta p2_x
-        sta p2_y
+        sta p2_x+1
 
-        lda #$88
-        sta p1_y
+        lda #$80
         sta p1_y+1
-        sta p2_y
         sta p2_y+1
 
         lda #$01
         sta p2_dir
+
+        lda #$00
+        sta p1_y
+        sta p2_y
+        sta p1_x
+        sta p2_x
 
         rts
 
@@ -224,9 +226,11 @@ main_entry:
         jsr disc_bottom_mask_draw
 ; Graphics updates
         ; Enable emphasis to test performance
+        key_isdown pad_1, btn_a
         lda ppumask_config
         ora #%01100000
         sta PPUMASK
+:
         jsr wait_nmi
         ppu_disable
 
