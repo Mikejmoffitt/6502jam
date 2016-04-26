@@ -31,13 +31,37 @@ PLAYER_ANIM_FRAMEOFF = $0d
 ; Twelve sprites are allocated for a frame.
 player_mapping_stand:
         .byte   <-32, $22, %00000001, <-4
-        .byte   <-32, $23, %00000001, 4
+        .byte   <-32, $21, %00000001, 4
         .byte   <-24, $32, %00000001, <-4
         .byte   <-24, $33, %00000001, 4
         .byte   <-16, $43, %00000010, <-4
         .byte   <-16, $44, %00000010, 4
         .byte   <-8, $53, %00000010, <-4
         .byte   <-8, $54, %00000010, 4
+        .byte   $FF
+
+player_mapping_run1:
+        .byte   <-33, $20, %00000001, <-4
+        .byte   <-33, $21, %00000001, 4
+        .byte   <-25, $30, %00000001, <-4
+        .byte   <-25, $31, %00000001, 4
+        .byte   <-17, $40, %00000010, <-6
+        .byte   <-17, $41, %00000010, 2
+        .byte   <-9, $50, %00000010, <-8
+        .byte   <-9, $51, %00000010, 0
+        .byte   <-9, $52, %00000010, 7
+        .byte   $FF
+
+player_mapping_run2:
+        .byte   <-33, $24, %00000001, <-4
+        .byte   <-33, $21, %00000001, 4
+        .byte   <-25, $34, %00000001, <-4
+        .byte   <-25, $35, %00000001, 4
+        .byte   <-17, $42, %00000010, <-6
+        .byte   <-17, $23, %00000010, 2
+        .byte   <-9, $50, %00000010, <-8
+        .byte   <-9, $51, %00000010, 0
+        .byte   <-9, $52, %00000010, 7
         .byte   $FF
 
 
@@ -48,17 +72,20 @@ player_handle_input:
 
 @handle_accel:
         key_isdown pad_1, btn_up
-        sub16 p1_y, #$40
+        sub16 p1_dy, #$12
 :
         key_isdown pad_1, btn_down
-        add16 p1_y, #$40
+        add16 p1_dy, #$12
 :
         key_isdown pad_1, btn_left
-        sub16 p1_x, #$40
+        sub16 p1_dx, #$12
 :
         key_isdown pad_1, btn_right
-        add16 p1_x, #$40
+        add16 p1_dx, #$12
 :
+
+        sum16 p1_x, p1_dx
+        sum16 p1_y, p1_dy
         rts
 
 ; Draws a shadow below the players, much like the disc has
@@ -86,21 +113,44 @@ players_draw:
         lda #PLAYER_SPR_NUM+16
         sta player_state + PLAYER_SPR_NUMOFF + PLAYER_OFFSET
 
-
         ldx #$00
+
+; Calculate frame to draw
+        lda frame_counter
+        tay
+        and #%00001000
+        beq @load_f0
+        tya 
+        and #%00010000
+        beq @load_f1
+@load_f2:
+        lda #<player_mapping_run2
+        sta addr_ptr              
+        lda #>player_mapping_run2
+        sta addr_ptr+1
+        jmp @draw
+
+@load_f1:
+        lda #<player_mapping_run1
+        sta addr_ptr              
+        lda #>player_mapping_run1
+        sta addr_ptr+1
+        jmp @draw
+
+@load_f0:
         lda #<player_mapping_stand
         sta addr_ptr              
         lda #>player_mapping_stand
         sta addr_ptr+1
+@draw:
+
         jsr player_draw
 
-@xoffset:
-        ;ldx #PLAYER_OFFSET
 @otherplayer:
         ldx #PLAYER_OFFSET
-        lda #<player_mapping_stand
+        lda #<player_mapping_run2
         sta addr_ptr                            
-        lda #>player_mapping_stand
+        lda #>player_mapping_run2
         sta addr_ptr+1
 
         jsr player_draw

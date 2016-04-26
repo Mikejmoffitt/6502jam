@@ -220,7 +220,7 @@ disc_draw:
         write_oam_y DISC_SPR_NUM
         write_oam_y (DISC_SPR_NUM + 1)
         clc
-        adc #$08
+        adc #$05
         
         cmp #$d0
         bcc @disc_bottom

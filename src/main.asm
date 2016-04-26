@@ -182,7 +182,7 @@ playfield_init:
         lda #$D8
         sta p2_x+1
 
-        lda #$80
+        lda #PLAYFIELD_Y+(PLAYFIELD_HEIGHT/2)
         sta p1_y+1
         sta p2_y+1
 
@@ -224,13 +224,14 @@ main_entry:
         jsr disc_draw
         jsr players_draw
         jsr disc_bottom_mask_draw
+
 ; Graphics updates
         ; Enable emphasis to test performance
-        key_isdown pad_1, btn_a
-        lda ppumask_config
-        ora #%01100000
-        sta PPUMASK
-:
+;        key_isdown pad_1, btn_a
+;        lda ppumask_config
+;        ora #%01100000
+;        sta PPUMASK
+;:
         jsr wait_nmi
         ppu_disable
 

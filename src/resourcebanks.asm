@@ -5,7 +5,7 @@
 .segment "BANK0"
 
 palettes:
-.incbin "assets/palettes.dat"
+.incbin "assets/gfx1.dat"
 
 gfx1:
 .incbin "assets/gfx1.chr"
