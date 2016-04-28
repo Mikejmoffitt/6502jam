@@ -8,6 +8,7 @@
 
 
 
+
 girl_mapping_fwd0:
         .byte   <-32, $22, %00000001, <-8
         .byte   <-32, $21, %00000001, 0
@@ -108,3 +109,25 @@ girl_mapping_up2:
         .byte   <-9, $47, %01000010, <-8
         .byte   <-9, $29, %01000010, 0
         .byte   $FF
+
+; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
+; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
+; A cheaper solution can be to shift right 4 times both operands, truncating the lower 4 bits of precision,
+; OR to truncate the lower 8 bits and then perform no shifting. Both solutions degrade precision.
+
+; Physics constants
+;	fix16: Walk speed (Orthagonal)
+;	fix16: Walk speed (Diagonal); should be orthagonal * 0.707
+;	fix16: Dash strength 
+;	fix16: Dash decel magnitude
+;	fix16: Throw strength 
+;	fix16: Throw time-stale factor
+
+girl_stats:
+	.word	300	; Straight walk speed
+	.word	212	; Diagonal walk speed
+	.word	512	; Dash strength
+	.word	192	; Dash decal magnitude due to friction
+	.word	640	; Max throw strength
+	.word	40	; Throw time-stale factor
+

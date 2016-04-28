@@ -201,6 +201,17 @@ OAM_BASE	= $200
 	sta addr+1
 .endmacro
 
+; Negate a 16-bit address
+.macro neg16 addr
+	sec
+	lda #$00
+	sbc addr
+	sta addr
+	lda #$00
+	sbc addr+1
+	sta addr+1
+.endmacro
+
 
 ; Run an OAM DMA
 .macro spr_dma

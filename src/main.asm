@@ -202,31 +202,29 @@ main_entry:
 	spr_dma
 	ppu_enable
 @toploop:
-; Logic Updates
+; Logic updates ------------------------
+; Update controller state captures
 	jsr read_joy_safe
-
 
 ; Disc and player logic are in bank E
 	bank_load #$0E
 
-	jsr disc_movement
-	jsr player_handle_input
+; Establish frame tick preconditions
+	jsr players_handle_input
 
+; Run a tick of physics
+	jsr disc_move
+	jsr players_move
+
+; Render from new result
 	jsr disc_draw
 	jsr players_draw
 	jsr disc_bottom_mask_draw
 
-; Graphics updates
-	; Enable emphasis to test performance
-;	key_isdown pad_1, btn_a
-;	lda ppumask_config
-;	ora #%01100000
-;	sta PPUMASK
-;:
+; Graphics updates ---------------------
 	jsr wait_nmi
 	ppu_disable
 
-; Time for PPU updates
 	spr_dma
 	ppu_load_scroll xscroll, yscroll
 

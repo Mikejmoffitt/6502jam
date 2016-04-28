@@ -15,11 +15,12 @@ PLAYER_YOFF = $02
 PLAYER_DXOFF = $04
 PLAYER_DYOFF = $06
 PLAYER_NUMOFF = $08
-PLAYER_DIROFF = $09
-PLAYER_SLIDE_CNTOFF = $0a
-PLAYER_BLOCK_CNTOFF = $0b
-PLAYER_SPR_NUMOFF = $0c
-PLAYER_ANIM_FRAMEOFF = $0d
+PLAYER_DIRXOFF = $09
+PLAYER_DIRYOFF = $0a
+PLAYER_SLIDE_CNTOFF = $0b
+PLAYER_BLOCK_CNTOFF = $0c
+PLAYER_SPR_NUMOFF = $0d
+PLAYER_ANIM_FRAMEOFF = $0e
 
 ; Player struct size
 PLAYER_OFFSET = $0e
@@ -38,10 +39,10 @@ players_init:
 
 ; P1 faces right
 	ldx #PLAYER_DIR_RIGHT
-	stx player_state + PLAYER_DIROFF	
+	stx player_state + PLAYER_DIRXOFF	
 	inx ; X gets PLAYER_DIR_LEFT
 ; P2 faces left
-	stx player_state + PLAYER_DIROFF + PLAYER_OFFSET
+	stx player_state + PLAYER_DIRXOFF + PLAYER_OFFSET
 
 ; both players start at half-height on the field
 	lda playfield_top		; A = Playfield top
@@ -68,42 +69,197 @@ players_init:
 
 	rts
 
-; Have players respond to gamepad input
-; Pre-entry conditions:
-; X is loaded with the player struct offset
-player_handle_input:
+; Move players about based on vector variables
+players_move:
 
-@handle_accel:
-	key_isdown pad_1, btn_up
-	sub16 p1_dy, #$12
-:
-	key_isdown pad_1, btn_down
-	add16 p1_dy, #$12
-:
-	key_isdown pad_1, btn_left
-	sub16 p1_dx, #$12
-:
-	key_isdown pad_1, btn_right
-	add16 p1_dx, #$12
-:
+	sum16 player_state+PLAYER_XOFF, player_state+PLAYER_DXOFF
+	sum16 player_state+PLAYER_YOFF, player_state+PLAYER_DYOFF
+	sum16 player_state+PLAYER_OFFSET+PLAYER_XOFF, player_state+PLAYER_OFFSET+PLAYER_DXOFF
+	sum16 player_state+PLAYER_OFFSET+PLAYER_YOFF, player_state+PLAYER_OFFSET+PLAYER_DYOFF
 
-	sum16 p1_x, p1_dx
-	sum16 p1_y, p1_dy
-
-	; Left bound first
-	lda playfield_left
-	clc
-	cmp p1_x+1
-	bcc @xy_done
-
-	ldx #$00
-	clc
-	adc #$01
-	sta p1_x+1
-	stx p1_x
-	stx p1_dx+1
-	stx p1_dx
 @xy_done:
+
+	rts
+	
+
+; Have players respond to gamepad input.
+; No special pre-entry conditions.
+players_handle_input:
+
+	ldx #$00			; Start by checking player 1's inputs
+
+@handle_accel_top:			; Top of this loop, run twice
+	cpx #$00			; Which player?
+	bne @p2_check			; Branch for player 2
+	lda pad_1
+	sta temp3
+	lda pad_1_prev
+	sta temp4
+	jmp @handle_directions		; Now to check buttons
+
+@p2_check:
+	lda pad_2
+	sta temp3
+	lda pad_2_prev
+	sta temp4
+; Pre-entry conditions:
+;	addr_ptr is loaded with the address of the controller to check
+@handle_directions:
+
+	ldy temp3			; Y = pad to check
+
+; Orthagonals are checked first.
+	cpy #(BUTTON_RIGHT)
+	bne :+
+	lda girl_stats + 0
+	sta player_state + PLAYER_DXOFF, x
+	lda girl_stats + 1
+	sta player_state + PLAYER_DXOFF+1, x
+	lda #$00
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF+1, x
+	sta player_state + PLAYER_DIRXOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_DOWN)
+	bne :+
+	lda girl_stats + 0
+	sta player_state + PLAYER_DYOFF, x
+	lda girl_stats + 1
+	sta player_state + PLAYER_DYOFF+1, x
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF+1, x
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_UP)
+	bne :+
+	lda girl_stats + 0
+	sta temp
+	lda girl_stats + 1
+	sta temp2
+	neg16 temp
+	lda temp
+	sta player_state + PLAYER_DYOFF, x
+	lda temp2
+	sta player_state + PLAYER_DYOFF+1, x
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF+1, x
+	lda #$01
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_LEFT)
+	bne :+
+	lda girl_stats + 0
+	sta temp
+	lda girl_stats + 1
+	sta temp2
+	neg16 temp
+	lda temp
+	sta player_state + PLAYER_DXOFF, x
+	lda temp2
+	sta player_state + PLAYER_DXOFF+1, x
+	lda #$00
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF+1, x
+	lda #$01
+	sta player_state + PLAYER_DIRXOFF, x
+	jmp @postinput
+:
+
+; Diagonals are checked second
+	cpy #(BUTTON_RIGHT | BUTTON_DOWN)
+	bne :+
+	lda girl_stats + 2
+	sta player_state + PLAYER_DXOFF, x
+	lda girl_stats + 3
+	sta player_state + PLAYER_DXOFF+1, x
+	lda girl_stats + 2
+	sta player_state + PLAYER_DYOFF, x
+	lda girl_stats + 3
+	sta player_state + PLAYER_DYOFF+1, x 
+	lda #$00
+	sta player_state + PLAYER_DIRXOFF, x
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_RIGHT | BUTTON_UP)
+	bne :+
+	lda girl_stats + 2
+	sta player_state + PLAYER_DXOFF, x 
+	sta temp
+	lda girl_stats + 3
+	sta player_state + PLAYER_DXOFF+1, x 
+	sta temp2
+	neg16 temp
+	lda temp
+	sta player_state + PLAYER_DYOFF, x
+	lda temp+1
+	sta player_state + PLAYER_DYOFF + 1, x
+	lda #$00
+	sta player_state + PLAYER_DIRXOFF, x
+	lda #$01
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_LEFT | BUTTON_UP)
+	bne :+
+	lda girl_stats + 2
+	sta temp
+	lda girl_stats + 3
+	sta temp2
+	neg16 temp
+	lda temp
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DYOFF, x
+	lda temp+1
+	sta player_state + PLAYER_DXOFF + 1, x
+	sta player_state + PLAYER_DYOFF + 1, x
+	lda #$01
+	sta player_state + PLAYER_DIRXOFF, x
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+	cpy #(BUTTON_LEFT | BUTTON_DOWN)
+	bne :+
+	lda girl_stats + 2
+	sta player_state + PLAYER_DYOFF, x
+	sta temp
+	lda girl_stats + 3
+	sta player_state + PLAYER_DYOFF+1, x
+	sta temp2
+	neg16 temp
+	lda temp
+	sta player_state + PLAYER_DXOFF, x
+	lda temp+1
+	sta player_state + PLAYER_DXOFF + 1, x
+	lda #$01
+	sta player_state + PLAYER_DIRXOFF, x
+	lda #$00
+	sta player_state + PLAYER_DIRYOFF, x
+	jmp @postinput
+:
+
+; No button presses detected; zero out player movement.
+@noinput:
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF+1, x
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF+1, x
+; A pad has been checked; see if we need to now check the other or if we 
+; are completely finished.
+@postinput:
+
+	cpx #$00			; Did we just check player 1?
+	bne @endloop 			; If not, we're done here (both done)
+	ldx #PLAYER_OFFSET		; Now it's time to check player 2's
+	jmp @handle_accel_top
+
+@endloop:
 
 	rts
 
@@ -117,12 +273,12 @@ players_draw:
 
 	key_isdown pad_1, btn_left
 	lda #$01
-	sta player_state + PLAYER_DIROFF
+	sta player_state + PLAYER_DIRXOFF
 :
 
 	key_isdown pad_1, btn_right
 	lda #$00
-	sta player_state + PLAYER_DIROFF
+	sta player_state + PLAYER_DIRXOFF
 :
 
 ; Set some sprite base numbers
@@ -247,7 +403,7 @@ player_draw:
 	rol a
 	rol a
 	rol a
-	eor player_state + PLAYER_DIROFF, x ; X flip
+	eor player_state + PLAYER_DIRXOFF, x ; X flip
 	ror a
 	ror a
 	ror a
@@ -255,7 +411,7 @@ player_draw:
 	iny				 ; Y = OAM X position
 
 
-	lda player_state + PLAYER_DIROFF, x
+	lda player_state + PLAYER_DIRXOFF, x
 	beq @noflipx
 	lda #$00
 	sec

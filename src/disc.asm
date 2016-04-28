@@ -1,9 +1,5 @@
 ; Routines for the flying disc
 
-; ============================
-;       Basic movement
-; ============================
-
 
 DISC_H = $0c
 DISC_W = $0c
@@ -11,6 +7,9 @@ DISC_MAX_Z = $1c
 DISC_SPR_NUM = 10
 DISC_SHADOW_SPR_NUM = 50
 
+; ============================
+;  Initialize disc
+; ============================
 disc_init:
 	lda #$00
 	sta disc_y
@@ -26,7 +25,11 @@ disc_init:
 	sta disc_x+1
 	rts
 
-disc_movement:
+; ============================
+;       Basic movement
+; ============================
+
+disc_move:
 	key_down pad_2, btn_start
 	lda #$00
 	sta disc_dz
@@ -96,14 +99,7 @@ disc_movement:
 
 @flip_dy:
 	; Invert dY
-	sec
-	lda #$00
-	sbc disc_dy
-	sta disc_dy
-	lda #$00
-	sbc disc_dy+1
-	sta disc_dy+1
-
+	neg16 disc_dy
 
 @h_check:
 	; Check which way the disc is going
