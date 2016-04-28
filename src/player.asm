@@ -86,6 +86,10 @@ players_move:
 ; No special pre-entry conditions.
 players_handle_input:
 
+        lda player_state + PLAYER_SLIDE_CNTOFF, x
+        cmp #$00
+        bne @post_dpad
+
 	ldx #$00			; Start by checking player 1's inputs
 
 @handle_accel_top:			; Top of this loop, run twice
@@ -119,7 +123,7 @@ players_handle_input:
 	sta player_state + PLAYER_DYOFF, x
 	sta player_state + PLAYER_DYOFF+1, x
 	sta player_state + PLAYER_DIRXOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 	cpy #(BUTTON_DOWN)
 	bne :+
@@ -131,7 +135,7 @@ players_handle_input:
 	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF+1, x
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 	cpy #(BUTTON_UP)
 	bne :+
@@ -149,8 +153,11 @@ players_handle_input:
 	sta player_state + PLAYER_DXOFF+1, x
 	lda #$01
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
+        jmp @ldpad
+@
+@ldpad:
 	cpy #(BUTTON_LEFT)
 	bne :+
 	lda girl_stats + 0
@@ -167,7 +174,7 @@ players_handle_input:
 	sta player_state + PLAYER_DYOFF+1, x
 	lda #$01
 	sta player_state + PLAYER_DIRXOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 
 ; Diagonals are checked second
@@ -184,7 +191,7 @@ players_handle_input:
 	lda #$00
 	sta player_state + PLAYER_DIRXOFF, x
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 	cpy #(BUTTON_RIGHT | BUTTON_UP)
 	bne :+
@@ -203,7 +210,7 @@ players_handle_input:
 	sta player_state + PLAYER_DIRXOFF, x
 	lda #$01
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 	cpy #(BUTTON_LEFT | BUTTON_UP)
 	bne :+
@@ -221,7 +228,7 @@ players_handle_input:
 	lda #$01
 	sta player_state + PLAYER_DIRXOFF, x
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 	cpy #(BUTTON_LEFT | BUTTON_DOWN)
 	bne :+
@@ -240,11 +247,11 @@ players_handle_input:
 	sta player_state + PLAYER_DIRXOFF, x
 	lda #$00
 	sta player_state + PLAYER_DIRYOFF, x
-	jmp @postinput
+	jmp @post_dpad
 :
 
 ; No button presses detected; zero out player movement.
-@noinput:
+@nodpad:
 	lda #$00
 	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF+1, x
@@ -252,7 +259,8 @@ players_handle_input:
 	sta player_state + PLAYER_DYOFF+1, x
 ; A pad has been checked; see if we need to now check the other or if we 
 ; are completely finished.
-@postinput:
+@post_dpad:
+
 
 	cpx #$00			; Did we just check player 1?
 	bne @endloop 			; If not, we're done here (both done)
@@ -377,25 +385,24 @@ player_draw:
 	; temp2 contains #%00000010 for an attribute modification, presently unused
 	; temp contains Y + 48, which is the base case to end this loop
 @oam_copy_loop:
-						; Y = OAM Y position
+					; Y = OAM Y position
 	; Y position
-	lda (addr_ptr), y		 ; Y pos relative to player
-	cmp #$FF				; Check unused flag
+	lda (addr_ptr), y		; Y pos relative to player
+	cmp #$FF			; Check unused flag
 	beq @end_frame			; Y-Pos was $FF; terminate loop
 	clc
 	adc player_state + PLAYER_YOFF + 1, x ; Offset from player's Y center
 	sta OAM_BASE, y
-	iny				 ; Y = OAM tile select
+	iny				; Y = OAM tile select
 
 	lda (addr_ptr), y
 	sta OAM_BASE, y
-	iny				 ; Y = OAM attributes
-
+	iny				; Y = OAM attributes
 
 	lda (addr_ptr), y
 	cpx #$00
 	beq @nomod_pal			; Don't modify palette for P1
-	bit temp2			 ; Only modify the palette to #3
+	bit temp2			; Only modify the palette to #3
 	beq @nomod_pal			; if palette #2 is being used
 	ora #%00000001
 
