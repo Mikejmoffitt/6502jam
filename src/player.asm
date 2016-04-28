@@ -81,15 +81,8 @@ players_move:
 
 	rts
 	
-
-; Have players respond to gamepad input.
-; No special pre-entry conditions.
-players_handle_input:
-
-        lda player_state + PLAYER_SLIDE_CNTOFF, x
-        cmp #$00
-        bne @post_dpad
-
+; D-pad subroutine for the input handler
+players_input_dpad:
 	ldx #$00			; Start by checking player 1's inputs
 
 @handle_accel_top:			; Top of this loop, run twice
@@ -110,7 +103,9 @@ players_handle_input:
 ;	addr_ptr is loaded with the address of the controller to check
 @handle_directions:
 
-	ldy temp3			; Y = pad to check
+	lda temp3			; Y = pad to check
+	and #(BUTTON_RIGHT|BUTTON_LEFT|BUTTON_UP|BUTTON_DOWN)
+	tay
 
 ; Orthagonals are checked first.
 	cpy #(BUTTON_RIGHT)
@@ -156,7 +151,7 @@ players_handle_input:
 	jmp @post_dpad
 :
         jmp @ldpad
-@
+
 @ldpad:
 	cpy #(BUTTON_LEFT)
 	bne :+
@@ -268,6 +263,18 @@ players_handle_input:
 	jmp @handle_accel_top
 
 @endloop:
+	rts
+
+
+; Have players respond to gamepad input.
+; No special pre-entry conditions.
+players_handle_input:
+
+        lda player_state + PLAYER_SLIDE_CNTOFF, x
+        cmp #$00
+        bne @post_dpad
+	jsr players_input_dpad
+@post_dpad:
 
 	rts
 

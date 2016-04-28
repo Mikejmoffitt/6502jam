@@ -25,6 +25,12 @@ $(EXECUTABLE):
 	$(AS) $(SRCDIR)/$(TOPLEVEL) $(ASFLAGS) -I $(SRCDIR) -l $(LISTNAME) -o $(OBJNAME)
 	$(LD) $(LDFLAGS) -C $(CONFIGNAME) -o $(EXECUTABLE) -m $(MAPNAME) -vm $(OBJNAME)
 
+mednafen: $(EXECUTABLE)
+	mednafen ./$(EXECUTABLE)
+
+fceux: $(EXECUTABLE)
+	fceux ./$(EXECUTABLE)
+
 run: $(EXECUTABLE)
 	nestopia ./$(EXECUTABLE)
 
