@@ -83,8 +83,6 @@ players_move:
 	
 ; D-pad subroutine for the input handler
 players_input_dpad:
-	ldx #$00			; Start by checking player 1's inputs
-
 @handle_accel_top:			; Top of this loop, run twice
 	cpx #$00			; Which player?
 	bne @p2_check			; Branch for player 2
@@ -255,27 +253,27 @@ players_input_dpad:
 ; A pad has been checked; see if we need to now check the other or if we 
 ; are completely finished.
 @post_dpad:
-
-
-	cpx #$00			; Did we just check player 1?
-	bne @endloop 			; If not, we're done here (both done)
-	ldx #PLAYER_OFFSET		; Now it's time to check player 2's
-	jmp @handle_accel_top
-
-@endloop:
 	rts
 
-
-; Have players respond to gamepad input.
-; No special pre-entry conditions.
+; ====================================================
+; Routine to have players respond to controller inputs
+; Encapsulates several other routines which run.
+; No pre-entry conditions must be gauranteed.
+; ====================================================
 players_handle_input:
 
+	ldx #$00
+@toploop:
         lda player_state + PLAYER_SLIDE_CNTOFF, x
         cmp #$00
         bne @post_dpad
 	jsr players_input_dpad
 @post_dpad:
-
+	cpx #$00			; Did we just check player 1?
+	bne @endloop 			; If not, we're done here (both done)
+	ldx #PLAYER_OFFSET		; Now it's time to check player 2's
+	jmp @toploop
+@endloop:
 	rts
 
 ; Draws a shadow below the players, much like the disc has
