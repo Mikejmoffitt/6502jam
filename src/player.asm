@@ -55,6 +55,9 @@ players_init:
 	sta player_state + PLAYER_YOFF+1
 	sta player_state + PLAYER_YOFF+1 + PLAYER_OFFSET
 
+	lda playfield_top
+	sta player_state + PLAYER_YOFF+1
+
 ; P1 on the left side
 	lda playfield_left
 	clc
