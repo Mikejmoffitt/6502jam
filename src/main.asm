@@ -194,10 +194,12 @@ main_entry:
 	ppu_write_32kbit gfx1, #$00
 
 	lda #$00
-	sta yscroll
 	sta yscroll+1
 	sta xscroll
 	sta xscroll+1
+	sec
+	sbc #$04
+	sta yscroll
 
 	spr_dma
 	ppu_enable

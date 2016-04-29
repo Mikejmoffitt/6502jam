@@ -163,6 +163,8 @@ disc_move:
 disc_bottom_mask_draw:
 	; Mask bottom of playfield
 	lda #$cf
+	sec
+	sbc yscroll
 	write_oam_y 1
 	write_oam_y 2
 	write_oam_y 3
@@ -205,7 +207,6 @@ disc_bottom_mask_draw:
 ; ============================
 disc_draw:
 
-
 	lda #%00000000		  ; Attributes defaults
 	sta temp
 	sta temp2
@@ -216,11 +217,14 @@ disc_draw:
 	; Y position
 	lda disc_y+1
 	sec
-	sbc #((DISC_H/2)+1)
-	sbc disc_z+1
+	sbc #((DISC_H/2)+1)		; Disc height offset
+	sec
+	sbc disc_z+1			; Disc Z offset
+	sec
+	sbc yscroll			; Y scroll offset
 
 					; Determine if it should be behind BG
-	cmp #$d0
+	cmp playfield_bottom
 	bcc @disc_top
 	pha
 	lda #%00100000
@@ -325,6 +329,8 @@ disc_draw:
 	lda disc_x+1
 	sec
 	sbc #((DISC_W/2)+03)
+	sec
+	sbc xscroll
 	write_oam_x DISC_SPR_NUM
 	write_oam_x (DISC_SPR_NUM + 2)
 	clc
@@ -355,6 +361,8 @@ disc_draw:
 	lda disc_y+1
 	sec
 	sbc #(DISC_H/2)
+	sec
+	sbc yscroll
 	clc
 	adc #$06
 	cmp #$d0
@@ -374,6 +382,8 @@ disc_draw:
 	lsr
 	clc
 	adc disc_x+1
+	sec
+	sbc xscroll
 	sec
 	sbc #(DISC_W/2)
 	write_oam_x DISC_SHADOW_SPR_NUM

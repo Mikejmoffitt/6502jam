@@ -359,7 +359,7 @@ player_draw:
 
 	clc
 	adc #$30
-	sta temp				; Y base case
+	sta temp			; Y base case
 
 	sty temp2			 ; OAM index offset
 	sub16 addr_ptr, temp2		 ; Subtract to correct for Y off
@@ -383,6 +383,8 @@ player_draw:
 	beq @end_frame			; Y-Pos was $FF; terminate loop
 	clc
 	adc player_state + PLAYER_YOFF + 1, x ; Offset from player's Y center
+	sec
+	sbc yscroll			; Factor in scrolling position
 	sta OAM_BASE, y
 	iny				; Y = OAM tile select
 
@@ -406,16 +408,18 @@ player_draw:
 	ror a
 	ror a
 	sta OAM_BASE, y
-	iny				 ; Y = OAM X position
+	iny				; Y = OAM X position
 
 
 	lda player_state + PLAYER_DIRXOFF, x
 	beq @noflipx
 	lda #$00
 	sec
-	sbc (addr_ptr), y		 ; Reverse relative X position
+	sbc (addr_ptr), y		; Reverse relative X position
 	sec
 	sbc #$08
+	sec
+	sbc xscroll			; Factor in scrolling position
 	clc
 	adc player_state + PLAYER_XOFF + 1, x ; Offset from player's X center
 	sec
@@ -429,6 +433,8 @@ player_draw:
 	lda (addr_ptr), y		 ; X pos relative to player
 	clc				 ; Add one to X offset
 	adc player_state + PLAYER_XOFF + 1, x ; Offset from player's X center
+	sec
+	sbc xscroll			; Factor in scrolling position
 	sta OAM_BASE, y
 	iny
 
