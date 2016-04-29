@@ -320,32 +320,15 @@ players_draw:
 	ldx #$00
 
 ; Calculate frame to draw
-	lda frame_counter
-	tay
-	and #%00001000
-	beq @load_f0
-	tya
-	and #%00010000
-	beq @load_f1
 @load_f2:
-	lda #<girl_mapping_fwd2
+	ldy #$02
+	lda girl_anim_run_fwd, y
 	sta addr_ptr
-	lda #>girl_mapping_fwd2
+	iny
+	lda girl_anim_run_fwd, y
 	sta addr_ptr+1
 	jmp @draw
 
-@load_f1:
-	lda #<girl_mapping_fwd1
-	sta addr_ptr
-	lda #>girl_mapping_fwd1
-	sta addr_ptr+1
-	jmp @draw
-
-@load_f0:
-	lda #<girl_mapping_fwd0
-	sta addr_ptr
-	lda #>girl_mapping_fwd0
-	sta addr_ptr+1
 @draw:
 
 	jsr player_draw

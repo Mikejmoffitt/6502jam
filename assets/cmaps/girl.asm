@@ -110,6 +110,31 @@ girl_mapping_up2:
         .byte   <-9, $29, %01000010, 0
         .byte   $FF
 
+; Animation scripts are simply like this:
+; Length
+; Loop Point in frames
+; --------- Then, for every frame:
+; Mapping address		(.addr)
+; Length in frames		(.byte)
+; Padding			(.byte)
+
+
+girl_anim_run_fwd:
+	.byte	4
+	.byte	0
+	.addr	girl_mapping_fwd0 ; ------------
+	.byte	5
+	.byte	0
+	.addr	girl_mapping_fwd1 ; ------------
+	.byte	5
+	.byte	0
+	.addr	girl_mapping_fwd0 ; ------------
+	.byte	5
+	.byte	0
+	.addr	girl_mapping_fwd2 ; ------------
+	.byte	5
+	.byte	0
+
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
 ; A cheaper solution can be to shift right 4 times both operands, truncating the lower 4 bits of precision,
