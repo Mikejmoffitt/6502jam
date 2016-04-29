@@ -36,3 +36,6 @@ run: $(EXECUTABLE)
 
 debug: $(EXECUTABLE)
 	wine tools/fceuxw/fceux.exe ./$(EXECUTABLE)
+
+test: $(EXECUTABLE)
+	tools/edn8usb $(EXECUTABLE)
