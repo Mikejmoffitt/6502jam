@@ -162,7 +162,9 @@ disc_move:
 
 disc_bottom_mask_draw:
 	; Mask bottom of playfield
-	lda #$cf
+	lda playfield_bottom
+	sec
+	sbc #$21
 	sec
 	sbc yscroll
 	write_oam_y 1
@@ -209,7 +211,7 @@ disc_draw:
 	
 	lda playfield_bottom
 	sec
-	sbc #$1F
+	sbc #$20
 	sta temp3		; Temp3 = disc priority cutoff
 
 	lda #%00000000		  ; Attributes defaults

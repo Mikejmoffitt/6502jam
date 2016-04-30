@@ -218,7 +218,7 @@ main_entry:
 
 ; Render from new result
 	jsr disc_draw
-	; jsr players_draw
+	jsr players_draw
 	jsr disc_bottom_mask_draw
 
 ; Graphics updates ---------------------
