@@ -206,6 +206,11 @@ disc_bottom_mask_draw:
 ;  Render the disc on-screen
 ; ============================
 disc_draw:
+	
+	lda playfield_bottom
+	sec
+	sbc #$1F
+	sta temp3		; Temp3 = disc priority cutoff
 
 	lda #%00000000		  ; Attributes defaults
 	sta temp
@@ -224,7 +229,7 @@ disc_draw:
 	sbc yscroll			; Y scroll offset
 
 					; Determine if it should be behind BG
-	cmp playfield_bottom
+	cmp temp3
 	bcc @disc_top
 	pha
 	lda #%00100000
@@ -237,7 +242,7 @@ disc_draw:
 	clc
 	adc #$05
 
-	cmp #$d0
+	cmp temp3
 	bcc @disc_bottom
 
 	pha
