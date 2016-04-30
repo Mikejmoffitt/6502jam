@@ -197,8 +197,6 @@ main_entry:
 	sta yscroll+1
 	sta xscroll
 	sta xscroll+1
-	sec
-	sbc #$04
 	sta yscroll
 
 	spr_dma
