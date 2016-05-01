@@ -42,6 +42,8 @@ player_choose_animation:
 	jsr player_set_anim_num
 	rts
 
+fuckbag:
+	.addr girl_anim_stand_fwd
 
 ; Sets the player's animation to the number loaded in A. If the animation is
 ; already loaded, do nothing. Otherwise, reset animation counters.
@@ -58,29 +60,12 @@ player_set_anim_num:
 	sta player_state + PLAYER_ANIM_FRAMEOFF, x
 
 	
-	asl a					
-	tay					; Y = lookup into script table
-
-	lda player_state + PLAYER_ANIM_LOOKUPOFF, x
-	sta addr_ptr
-	lda player_state + PLAYER_ANIM_LOOKUPOFF + 1, x
-	sta addr_ptr+1
-
-	; TEMPORARY BAD HACK
-	lda #<girl_anim_num_lookup
-	sta addr_ptr
-	lda #>girl_anim_num_lookup
-	sta addr_ptr+1
-	; addr_ptr = script address
-
-	lda (addr_ptr), y			; Lower address of anim script
+	lda fuckbag
+	lda #<girl_anim_stand_fwd
 	sta player_state + PLAYER_ANIM_ADDROFF, x
-	iny
-	lda (addr_ptr), y			; Upper address of anim script
-	sta player_state + PLAYER_ANIM_ADDROFF+1, x
-	dey
-
-	; ADDROFF contains animation script top
+	lda fuckbag+1
+	lda #>girl_anim_stand_fwd
+	sta player_state + PLAYER_ANIM_ADDROFF + 1, x
 
 	; Load length from the animation script header
 	lda player_state + PLAYER_ANIM_ADDROFF, x
@@ -112,18 +97,23 @@ player_choose_mapping:
 	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
 	sta temp2
 
+	; Temp contains the script offset
+
 	add16 temp, #$02		; addr_ptr = script's first frame
-	lda player_state + PLAYER_ANIM_FRAMEOFF, x
-	asl a
-	asl a				; A = index into script for frame
-	sta temp3
-	add16 temp, temp3		; addr_ptr = *frame address
+
+	; Temp contains script 2; first frame address
+	;lda player_state + PLAYER_ANIM_FRAMEOFF, x
+	;asl a
+	;asl a				; A = index into script for frame
+	;sta temp3
+	;add16 temp, temp3		; addr_ptr = *frame address
 
 	ldy #$00
+	lda (temp), y			
+	sta addr_ptr			; addr_ptr = lowaddr of mapping
+	iny
 	lda (temp), y
-	sta addr_ptr
-	lda (temp+1), y
-	sta addr_ptr+1
+	sta addr_ptr+1			; addr_ptr+1 = hiaddr of mapping
 
 	rts
 

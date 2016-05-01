@@ -161,7 +161,6 @@ girl_anim_run_fwd:
 ; An array containing the addresses of animation numbers. Used to map animation
 ; number to an animation script.
 
-.asciiz	"LUT"
 girl_anim_num_lookup:
 	.addr (girl_anim_stand_fwd + $10)
 	;.addr girl_anim_stand_up

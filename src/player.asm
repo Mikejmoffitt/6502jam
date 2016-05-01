@@ -64,12 +64,12 @@ players_init:
 
 ; TODO: Choose this based on character selection
 ; temporarily set up player to run the girl's animations
-	lda #<girl_anim_num_lookup
-	sta player_state + PLAYER_ANIM_LOOKUPOFF
-	sta player_state + PLAYER_ANIM_LOOKUPOFF + PLAYER_SIZE
-	lda #>girl_anim_num_lookup
-	sta player_state + PLAYER_ANIM_LOOKUPOFF + 1
-	sta player_state + PLAYER_ANIM_LOOKUPOFF + 1 + PLAYER_SIZE
+	;lda #<girl_anim_num_lookup
+	;sta player_state + PLAYER_ANIM_LOOKUPOFF
+	;sta player_state + PLAYER_ANIM_LOOKUPOFF + PLAYER_SIZE
+	;lda #>girl_anim_num_lookup
+	;sta player_state + PLAYER_ANIM_LOOKUPOFF + 1
+	;sta player_state + PLAYER_ANIM_LOOKUPOFF + 1 + PLAYER_SIZE
 
 ; P1 on the left side
 	lda playfield_left
