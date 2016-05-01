@@ -39,6 +39,7 @@ girl_mapping_fwd2:
         .byte   <-25, $35, %00000001, 0
         .byte   <-17, $42, %00000010, <-10
         .byte   <-17, $23, %00000010, <-2
+	.byte >girl_anim_stand_fwd
         .byte   <-9, $50, %00000010, <-12
         .byte   <-9, $51, %00000010, <-4
         .byte   <-9, $52, %00000010, 3
@@ -110,30 +111,62 @@ girl_mapping_up2:
         .byte   <-9, $29, %01000010, 0
         .byte   $FF
 
+; ========== Animation Scripts ===========
+;
 ; Animation scripts are simply like this:
-; Length
-; Loop Point in frames
+; 	Length
+; 	Loop P oint in frames
 ; --------- Then, for every frame:
-; Mapping address		(.addr)
-; Length in frames		(.byte)
-; Padding			(.byte)
+; 	Mapping address		(.addr)
+; 	Length in frames	(.byte)
+; 	Padding			(.byte)
 
+girl_anim_stand_fwd:
+	.byte 1
+	.byte 0
+	.addr girl_mapping_fwd0
+	.byte 128
+	.byte 0
+
+girl_anim_stand_up:
+	.byte 1
+	.byte 0
+	.addr girl_mapping_up0
+	.byte 128
+	.byte 0
+
+girl_anim_stand_down:
+	.byte 1
+	.byte 0
+	.addr girl_mapping_down0
+	.byte 128
+	.byte 0
 
 girl_anim_run_fwd:
 	.byte	4
 	.byte	0
 	.addr	girl_mapping_fwd0 ; ------------
-	.byte	5
+	.byte	4
 	.byte	0
 	.addr	girl_mapping_fwd1 ; ------------
-	.byte	5
+	.byte	6
 	.byte	0
 	.addr	girl_mapping_fwd0 ; ------------
-	.byte	5
+	.byte	4
 	.byte	0
 	.addr	girl_mapping_fwd2 ; ------------
-	.byte	5
+	.byte	6
 	.byte	0
+
+; An array containing the addresses of animation numbers. Used to map animation
+; number to an animation script.
+
+.asciiz	"LUT"
+girl_anim_num_lookup:
+	.addr (girl_anim_stand_fwd + $10)
+	;.addr girl_anim_stand_up
+	;.addr girl_anim_stand_down
+	;.addr girl_anim_run_fwd
 
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.

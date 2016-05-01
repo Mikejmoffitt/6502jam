@@ -1,5 +1,7 @@
 .segment "ZEROPAGE"
 
+PLAYER_SIZE = $30
+
 	 temp:				.res 1
 	 temp2:				.res 1
 	 temp3:				.res 1
@@ -20,26 +22,5 @@ disc_state:
 	 disc_anim:			.res 1
 
 player_state:
-	 p1_x:				.res 2
-	 p1_y:				.res 2
-	 p1_dx:				.res 2
-	 p1_dy:				.res 2
-	 p1_num:			.res 1
-	 p1_dirx:			.res 1
-	 p1_diry:			.res 1
-	 p1_slide_cnt:			.res 1
-	 p1_block_cnt:			.res 1
-	 p1_spr_num:			.res 1
-	 p1_anim_frame:			.res 1
-
-	 p2_x:				.res 2
-	 p2_y:				.res 2
-	 p2_dx:				.res 2
-	 p2_dy:				.res 2
-	 p2_num:			.res 1
-	 p2_dirx:			.res 1
-	 p2_diry:			.res 1
-	 p2_slide_cnt:			.res 1
-	 p2_block_cnt:			.res 1
-	 p2_spr_num:			.res 1
-	 p2_anim_frame:			.res 1
+	.res PLAYER_SIZE
+	.res PLAYER_SIZE
