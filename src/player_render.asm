@@ -107,7 +107,7 @@ player_choose_animation:
 ;		-Animation frame number (ANIM_FRAMEOFF) (reset to zero)
 player_set_anim_num:
 
-	sta temp3				; Temp 3 contains animation num
+	sta temp3				; Store number argument
 	cmp player_state + PLAYER_ANIM_NUMOFF, x
 	beq @done
 	sta player_state + PLAYER_ANIM_NUMOFF, x
@@ -123,7 +123,7 @@ player_set_anim_num:
 
 	; addr_ptr now contains the map address
 	lda temp3
-	asl a
+	asl a					; Multiply by two
 	tay					; Get our animation # from A
 	lda (addr_ptr), y			; Get lobyte
 	sta player_state + PLAYER_ANIM_ADDROFF, x
@@ -196,7 +196,6 @@ player_choose_mapping:
 ;	ANIM_FRAMEOFF will reset to zero when it has reached the script length.
 player_animate:
 	
-	sta $5555
 	; Get address of script into temp
 	lda player_state + PLAYER_ANIM_ADDROFF, x
 	sta temp

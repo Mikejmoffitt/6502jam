@@ -1,14 +1,11 @@
-; Animation mapping constant data
+; =============== Animation Mappings ====================
+; Arrangements of sprites to form single animation frames, or "metasprites"
 ; Four bytes follow the mapping of what goes into OAM, mostly
-;       Sprite Y (relative to player's Y), signed; set to $FF to end the frame
+;       Sprite Y (relative to player's Y), signed; set to $FF to end list
 ;       Tile selection
 ;       Attributes; if bit 1 is set, then bit 0 will be set for player 2
 ;       Sprite X (relative to player's X), signed; flipped to face left
 ; Twelve sprites are allocated for a frame.
-
-
-
-
 girl_mapping_fwd0:
         .byte   <-32, $22, %00000001, <-8
         .byte   <-32, $21, %00000001, 0
@@ -110,8 +107,8 @@ girl_mapping_up2:
         .byte   <-9, $29, %01000010, 0
         .byte   $FF
 
-; ========== Animation Scripts ===========
-;
+; =============== Animation Scripts ===============
+; Sequences of mappings to form animation sequences
 ; Animation scripts are simply like this:
 ; 	Length
 ; 	Loop P oint in frames
