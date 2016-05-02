@@ -59,43 +59,60 @@ players_input_dpad:
 	lda pad_2_prev
 	sta temp4
 ; Pre-entry conditions:
-;	addr_ptr is loaded with the address of the controller to check
+;	temp3 is loaded with pad state capture
+;	temp4 is loaded with previous frame's pad state capture
 @handle_directions:
 
 	lda temp3			; Y = pad to check
 	and #(BUTTON_RIGHT|BUTTON_LEFT|BUTTON_UP|BUTTON_DOWN)
 	tay
 
+	lda player_state + PLAYER_STATS_ADDROFF, x
+	sta addr_ptr
+	lda player_state + PLAYER_STATS_ADDROFF + 1, x
+	sta addr_ptr + 1
+	; addr_ptr gets the stats block for the player
+
 ; Orthagonals are checked first.
 	cpy #(BUTTON_RIGHT)
 	bne :+
-	lda girl_stats + 0
+	ldy #$00
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
-	lda girl_stats + 1
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF+1, x
 	lda #$00
 	sta player_state + PLAYER_DYOFF, x
 	sta player_state + PLAYER_DYOFF+1, x
 	sta player_state + PLAYER_DIRXOFF, x
+	lda #PLAYER_FACING_RIGHT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 	cpy #(BUTTON_DOWN)
 	bne :+
-	lda girl_stats + 0
+	ldy #$00
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
-	lda girl_stats + 1
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF+1, x
 	lda #$00
 	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF+1, x
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_DOWN
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 	cpy #(BUTTON_UP)
 	bne :+
-	lda girl_stats + 0
+	ldy #$00
+	lda (addr_ptr), y
 	sta temp
-	lda girl_stats + 1
+	iny
+	lda (addr_ptr), y
 	sta temp2
 	neg16 temp
 	lda temp
@@ -107,6 +124,8 @@ players_input_dpad:
 	sta player_state + PLAYER_DXOFF+1, x
 	lda #$01
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_UP
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
         jmp @ldpad
@@ -114,9 +133,11 @@ players_input_dpad:
 @ldpad:
 	cpy #(BUTTON_LEFT)
 	bne :+
-	lda girl_stats + 0
+	ldy #$00
+	lda (addr_ptr), y
 	sta temp
-	lda girl_stats + 1
+	iny
+	lda (addr_ptr), y
 	sta temp2
 	neg16 temp
 	lda temp
@@ -128,31 +149,41 @@ players_input_dpad:
 	sta player_state + PLAYER_DYOFF+1, x
 	lda #$01
 	sta player_state + PLAYER_DIRXOFF, x
+	lda #PLAYER_FACING_LEFT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 
 ; Diagonals are checked second
 	cpy #(BUTTON_RIGHT | BUTTON_DOWN)
 	bne :+
-	lda girl_stats + 2
+	ldy #$02
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
-	lda girl_stats + 3
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF+1, x
-	lda girl_stats + 2
+	dey
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
-	lda girl_stats + 3
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF+1, x 
 	lda #$00
 	sta player_state + PLAYER_DIRXOFF, x
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_RIGHT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 	cpy #(BUTTON_RIGHT | BUTTON_UP)
 	bne :+
-	lda girl_stats + 2
+	ldy #$02
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x 
 	sta temp
-	lda girl_stats + 3
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF+1, x 
 	sta temp2
 	neg16 temp
@@ -164,13 +195,17 @@ players_input_dpad:
 	sta player_state + PLAYER_DIRXOFF, x
 	lda #$01
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_RIGHT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 	cpy #(BUTTON_LEFT | BUTTON_UP)
 	bne :+
-	lda girl_stats + 2
+	ldy #$02
+	lda (addr_ptr), y
 	sta temp
-	lda girl_stats + 3
+	iny
+	lda (addr_ptr), y
 	sta temp2
 	neg16 temp
 	lda temp
@@ -182,14 +217,18 @@ players_input_dpad:
 	lda #$01
 	sta player_state + PLAYER_DIRXOFF, x
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_LEFT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 	cpy #(BUTTON_LEFT | BUTTON_DOWN)
 	bne :+
-	lda girl_stats + 2
+	ldy #$02
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	sta temp
-	lda girl_stats + 3
+	iny
+	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF+1, x
 	sta temp2
 	neg16 temp
@@ -201,6 +240,8 @@ players_input_dpad:
 	sta player_state + PLAYER_DIRXOFF, x
 	lda #$00
 	sta player_state + PLAYER_DIRYOFF, x
+	lda #PLAYER_FACING_LEFT
+	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
 :
 

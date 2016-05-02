@@ -16,9 +16,11 @@ players_draw:
 	ldx #$00			; Loop runs first for player 1.
 
 @player_loop:
+	jsr player_animate
 	jsr player_choose_animation
 	jsr player_choose_mapping
 	jsr player_draw
+
 
 					; Re-run loop for player 2
 	cpx #$0
@@ -38,7 +40,56 @@ players_draw:
 ;	If appropriate, the player's animation number will have changed, and
 ;	the animation address will update as well.
 player_choose_animation:
-	lda #$03
+	lda player_state + PLAYER_DXOFF, x
+	bne @moving
+	lda player_state + PLAYER_DXOFF + 1, x
+	bne @moving
+	lda player_state + PLAYER_DYOFF, x
+	bne @moving
+	lda player_state + PLAYER_DYOFF + 1, x
+	bne @moving
+
+	lda #PLAYER_FACING_UP
+	cmp player_state + PLAYER_FACINGOFF, x
+	beq @facing_up_s
+	lda #PLAYER_FACING_DOWN
+	cmp player_state + PLAYER_FACINGOFF, x
+	beq @facing_down_s
+
+	; If we're here, then we are facing left/right
+	lda #ANIM_STAND_FWD
+	jsr player_set_anim_num
+	rts
+
+@facing_up_s:
+	lda #ANIM_STAND_UP
+	jsr player_set_anim_num
+	rts
+
+@facing_down_s:
+	lda #ANIM_STAND_DOWN
+	jsr player_set_anim_num
+	rts
+
+@moving:
+	lda #PLAYER_FACING_UP
+	cmp player_state + PLAYER_FACINGOFF, x
+	beq @facing_up
+	lda #PLAYER_FACING_DOWN
+	cmp player_state + PLAYER_FACINGOFF, x
+	beq @facing_down
+	; If we're here, then we are facing left/right
+	lda #ANIM_RUN_FWD
+	jsr player_set_anim_num
+	rts
+
+@facing_up:
+	lda #ANIM_RUN_UP
+	jsr player_set_anim_num
+	rts
+
+@facing_down:
+	lda #ANIM_RUN_DOWN
 	jsr player_set_anim_num
 	rts
 
@@ -57,9 +108,8 @@ player_choose_animation:
 player_set_anim_num:
 
 	sta temp3				; Temp 3 contains animation num
-	sta $5555
 	cmp player_state + PLAYER_ANIM_NUMOFF, x
-	;beq @done
+	beq @done
 	sta player_state + PLAYER_ANIM_NUMOFF, x
 	lda #$00
 	sta player_state + PLAYER_ANIM_CNTOFF, x
@@ -134,6 +184,74 @@ player_choose_mapping:
 	;addr_ptr now contains the mapping address. 
 
 	rts
+
+
+; Have the player step through an animation script.
+; Preconditions:
+;	X is loaded with the player struct offset
+;	ANIM_ADDROFF is loaded wtih a valid animation script address.
+; Postconditions:
+;	ANIM_CNTOFF has incremented, and if it's reached the current frame
+;	  length, it will have reset to zero and incremented ANIM_FRAMEOFF.
+;	ANIM_FRAMEOFF will reset to zero when it has reached the script length.
+player_animate:
+	
+	sta $5555
+	; Get address of script into temp
+	lda player_state + PLAYER_ANIM_ADDROFF, x
+	sta temp
+	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
+	sta temp2
+
+	add16 temp, #$04		; Point at the duration marker		
+
+	lda player_state + PLAYER_ANIM_FRAMEOFF, x ; Get current frame #
+	asl a				
+	asl a				; A = index into script for frame
+	sta temp3
+	add16 temp, temp3
+
+	; Temp points to the current frame's length
+	ldy #$00
+	lda (temp), y
+	sta temp
+
+	; Temp now contains the frame duration to compare against
+
+	; Increment animation accumulator
+	ldy player_state + PLAYER_ANIM_CNTOFF, x
+	iny
+	cpy temp		; Have we reached the end of this frame?
+	beq @frame_inc		; If so, increment frame number.
+	; Otherwise, just increment the accumulator.
+	sty player_state + PLAYER_ANIM_CNTOFF, x
+	rts
+
+@frame_inc:
+	lda #$00
+	sta player_state + PLAYER_ANIM_CNTOFF, x ; Reset frame accumulator
+	ldy player_state + PLAYER_ANIM_FRAMEOFF, x
+	iny
+	tya
+	cmp player_state + PLAYER_ANIM_LENOFF, x ; Is the animation over?
+	beq @anim_loop	; If so, loop animation
+	; Otherwise, just increment the frame number.
+	sty player_state + PLAYER_ANIM_FRAMEOFF, x
+	rts
+@anim_loop:
+	; Get address of script into temp
+	lda player_state + PLAYER_ANIM_ADDROFF, x
+	sta temp
+	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
+	sta temp2
+
+	add16 temp, #$01		; Point at the loop point	
+
+	ldy #$00
+	lda (temp), y
+	sta player_state + PLAYER_ANIM_FRAMEOFF, x
+	rts
+
 
 
 ; Based on current frame %2, select either player 1 or player 2 to receive a 

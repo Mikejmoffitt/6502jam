@@ -7,6 +7,19 @@ PLAYER_SPR_NUM = 18
 PLAYER_DIR_RIGHT = $00
 PLAYER_DIR_LEFT = $01
 
+PLAYER_FACING_UP = $00
+PLAYER_FACING_DOWN = $01
+PLAYER_FACING_LEFT = $02
+PLAYER_FACING_RIGHT = $03
+
+ANIM_STAND_FWD 	= $00
+ANIM_STAND_UP 	= $01
+ANIM_STAND_DOWN	= $02
+ANIM_RUN_FWD	= $03
+ANIM_RUN_UP	= $04
+ANIM_RUN_DOWN	= $05
+
+
 ; Struct access offsets
 PLAYER_XOFF = $00
 PLAYER_YOFF = $02
@@ -26,6 +39,10 @@ PLAYER_ANIM_FRAMEOFF = $13		; Currently displayed frame of animation
 PLAYER_ANIM_CNTOFF = $14		; Countup for frame duration; When cnt == len, frame++
 PLAYER_ANIM_LENOFF = $15		; Anim length; When frame == len, frame <= 0.
 PLAYER_ANIM_NUMOFF = $16
+
+PLAYER_FACINGOFF = $17
+
+PLAYER_STATS_ADDROFF = $18		; Pointer to stats block
 
 .include "../assets/cmaps/girl.asm"
 
@@ -72,6 +89,17 @@ players_init:
 	lda #>girl_anim_num_map
 	sta player_state + PLAYER_ANIM_MAPOFF + 1
 	sta player_state + PLAYER_ANIM_MAPOFF + 1 + PLAYER_SIZE
+
+; TODO: Also character selected
+; Load with stats
+	lda #<girl_stats
+	sta player_state + PLAYER_STATS_ADDROFF
+	lda #<girl_stats_alt
+	sta player_state + PLAYER_STATS_ADDROFF + PLAYER_SIZE
+	lda #>girl_stats
+	sta player_state + PLAYER_STATS_ADDROFF + 1
+	lda #>girl_stats_alt
+	sta player_state + PLAYER_STATS_ADDROFF + PLAYER_SIZE + 1
 
 ; P1 on the left side
 	lda playfield_left
