@@ -19,13 +19,15 @@ PLAYER_SLIDE_CNTOFF = $0b
 PLAYER_BLOCK_CNTOFF = $0c
 PLAYER_SPR_NUMOFF = $0d
 
-PLAYER_ANIM_LOOKUPOFF = $0e		; Animation lookup table; MUST be right before anim_addr
+PLAYER_ANIM_MAPOFF = $0e		; Animation MAP table; MUST be right before anim_addr
 PLAYER_ANIM_ADDROFF = $10		; Address of animation script
 PLAYER_ANIM_TABLEOFF = $12		; Address of table of animations to use
 PLAYER_ANIM_FRAMEOFF = $13		; Currently displayed frame of animation
 PLAYER_ANIM_CNTOFF = $14		; Countup for frame duration; When cnt == len, frame++
 PLAYER_ANIM_LENOFF = $15		; Anim length; When frame == len, frame <= 0.
 PLAYER_ANIM_NUMOFF = $16
+
+.include "../assets/cmaps/girl.asm"
 
 ; Player struct size
 
@@ -64,12 +66,12 @@ players_init:
 
 ; TODO: Choose this based on character selection
 ; temporarily set up player to run the girl's animations
-	;lda #<girl_anim_num_lookup
-	;sta player_state + PLAYER_ANIM_LOOKUPOFF
-	;sta player_state + PLAYER_ANIM_LOOKUPOFF + PLAYER_SIZE
-	;lda #>girl_anim_num_lookup
-	;sta player_state + PLAYER_ANIM_LOOKUPOFF + 1
-	;sta player_state + PLAYER_ANIM_LOOKUPOFF + 1 + PLAYER_SIZE
+	lda #<girl_anim_num_map
+	sta player_state + PLAYER_ANIM_MAPOFF
+	sta player_state + PLAYER_ANIM_MAPOFF + PLAYER_SIZE
+	lda #>girl_anim_num_map
+	sta player_state + PLAYER_ANIM_MAPOFF + 1
+	sta player_state + PLAYER_ANIM_MAPOFF + 1 + PLAYER_SIZE
 
 ; P1 on the left side
 	lda playfield_left
@@ -88,4 +90,3 @@ players_init:
 
 .include "player_movement.asm"
 .include "player_render.asm"
-.include "../assets/cmaps/girl.asm"

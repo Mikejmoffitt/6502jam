@@ -38,20 +38,26 @@ players_draw:
 ;	If appropriate, the player's animation number will have changed, and
 ;	the animation address will update as well.
 player_choose_animation:
-	lda #$00
+	lda #$03
 	jsr player_set_anim_num
 	rts
-
-fuckbag:
-	.addr girl_anim_stand_fwd
 
 ; Sets the player's animation to the number loaded in A. If the animation is
 ; already loaded, do nothing. Otherwise, reset animation counters.
 ; Preconditions:
+;	A is loaded with the desired animation script
 ;	X is loaded with the player struct offset
+; Postconditions:
+;	If a new animation is chosen, player_struct has these fields updated:
+;		-Animation script address (ANIM_ADDROFF)
+;		-Animation script length (ANIM_LENOFF)
+;		-Animation number (ANIM_NUMOFF)
+;		-Animation frame accumulator (ANIM_CNTOFF) (reset to zero)
+;		-Animation frame number (ANIM_FRAMEOFF) (reset to zero)
 player_set_anim_num:
 
-
+	sta temp3				; Temp 3 contains animation num
+	sta $5555
 	cmp player_state + PLAYER_ANIM_NUMOFF, x
 	;beq @done
 	sta player_state + PLAYER_ANIM_NUMOFF, x
@@ -59,24 +65,30 @@ player_set_anim_num:
 	sta player_state + PLAYER_ANIM_CNTOFF, x
 	sta player_state + PLAYER_ANIM_FRAMEOFF, x
 
-	
-	lda fuckbag
-	lda #<girl_anim_stand_fwd
-	sta player_state + PLAYER_ANIM_ADDROFF, x
-	lda fuckbag+1
-	lda #>girl_anim_stand_fwd
-	sta player_state + PLAYER_ANIM_ADDROFF + 1, x
-
-	; Load length from the animation script header
-	lda player_state + PLAYER_ANIM_ADDROFF, x
+	; First we need the address of the animation script from the map
+	lda player_state + PLAYER_ANIM_MAPOFF, x
 	sta addr_ptr
-	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
+	lda player_state + PLAYER_ANIM_MAPOFF + 1, x
 	sta addr_ptr + 1
 
-	; addr_ptr is the top of the script now
-	ldy #$00
-	lda (addr_ptr), y
-	sta player_state + PLAYER_ANIM_LENOFF, x
+	; addr_ptr now contains the map address
+	lda temp3
+	asl a
+	tay					; Get our animation # from A
+	lda (addr_ptr), y			; Get lobyte
+	sta player_state + PLAYER_ANIM_ADDROFF, x
+	sta temp
+	iny		
+	lda (addr_ptr), y			; Get hibyte
+	sta player_state + PLAYER_ANIM_ADDROFF + 1, x
+	sta temp2
+
+	; The player struct now has a reference to the chosen animation script.
+	; From that we can extract the length, but we need to put it into temp.
+
+	ldy #$00				; First parameter is length.
+	lda (temp), y				; A gets animation length
+	sta player_state + PLAYER_ANIM_LENOFF, x ; Store it in player struct
 
 @done:
 	rts
@@ -88,25 +100,29 @@ player_set_anim_num:
 ; Preconditions:
 ;	X is loaded with the player struct offset
 ; Postconditions:
-;	addr_ptr is loaded with the animation frame struct's animation
+;	addr_ptr is loaded with the appropriate mapping
 player_choose_mapping:
 
-	sta $5555
+	; Get address of script into temp
 	lda player_state + PLAYER_ANIM_ADDROFF, x
 	sta temp
 	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
 	sta temp2
 
-	; Temp contains the script offset
+	; Temp contains the script offset; we want the address of the first
+	; mapping, which is $02 in
 
-	add16 temp, #$02		; addr_ptr = script's first frame
+	add16 temp, #$02		; addr_ptr = script's first mapping
 
-	; Temp contains script 2; first frame address
-	;lda player_state + PLAYER_ANIM_FRAMEOFF, x
-	;asl a
-	;asl a				; A = index into script for frame
-	;sta temp3
-	;add16 temp, temp3		; addr_ptr = *frame address
+	lda player_state + PLAYER_ANIM_FRAMEOFF, x ; Get current frame #
+	asl a				
+	asl a				; A = index into script for frame
+					; A = current frame * 4
+	sta temp3
+	add16 temp, temp3		; addr_ptr = address of frame now
+
+
+	; Temp has the address of the animation mapping now.
 
 	ldy #$00
 	lda (temp), y			
@@ -115,25 +131,7 @@ player_choose_mapping:
 	lda (temp), y
 	sta addr_ptr+1			; addr_ptr+1 = hiaddr of mapping
 
-	rts
-
-
-	;temp & temp2 now point at the animation script
-
-
-	lda temp
-	sta addr_ptr
-	lda temp2
-	sta addr_ptr+1
-
-	add16 addr_ptr, #$02
-	rts
-
-; Test mapping which actually works
-;	lda #<girl_mapping_fwd2
-;	sta addr_ptr
-;	lda #>girl_mapping_fwd2
-;	sta addr_ptr+1
+	;addr_ptr now contains the mapping address. 
 
 	rts
 

@@ -1,7 +1,7 @@
 AS := ca65
 LD := ld65
-ASFLAGS := 
-LDFLAGS := 
+ASFLAGS := -g 
+LDFLAGS := -Ln labels.txt
 SRCDIR := src
 CONFIGNAME := config.cfg
 OBJNAME := main.o
