@@ -16,6 +16,7 @@ DISC_DYOFF = $08
 DISC_DZOFF = $0a
 DISC_ANIM_OFF = $0c
 
+
 ; ============================
 ;  Initialize disc
 ; ============================
@@ -141,50 +142,6 @@ disc_move:
 	sta disc_z
 	sta disc_dz
 	sta disc_dz+1
-	rts
-
-disc_bottom_mask_draw:
-	; Mask bottom of playfield
-	lda playfield_bottom
-	sec
-	sbc #$21
-	sec
-	sbc yscroll
-	write_oam_y 1
-	write_oam_y 2
-	write_oam_y 3
-	write_oam_y 4
-	write_oam_y 5
-	write_oam_y 6
-	write_oam_y 7
-	write_oam_y 8
-	lda #$00
-	write_oam_x 1
-	write_oam_x 2
-	write_oam_x 3
-	write_oam_x 4
-	write_oam_x 5
-	write_oam_x 6
-	write_oam_x 7
-	write_oam_x 8
-	lda #$FF
-	write_oam_tile 1
-	write_oam_tile 2
-	write_oam_tile 3
-	write_oam_tile 4
-	write_oam_tile 5
-	write_oam_tile 6
-	write_oam_tile 7
-	write_oam_tile 1
-	lda #%00100000
-	write_oam_attr 1
-	write_oam_attr 2
-	write_oam_attr 3
-	write_oam_attr 4
-	write_oam_attr 5
-	write_oam_attr 6
-	write_oam_attr 7
-	write_oam_attr 8
 	rts
 
 ; ============================

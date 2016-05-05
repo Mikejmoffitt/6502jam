@@ -81,6 +81,7 @@ player_check_disc:
 
 ; ========================================
 ; Player movement routine
+; No pre-entry conditions
 ; ========================================
 
 players_move:
@@ -89,9 +90,84 @@ players_move:
 	sum16 player_state+PLAYER_YOFF, player_state+PLAYER_DYOFF
 	sum16 player_state+PLAYER_SIZE+PLAYER_XOFF, player_state+PLAYER_SIZE+PLAYER_DXOFF
 	sum16 player_state+PLAYER_SIZE+PLAYER_YOFF, player_state+PLAYER_SIZE+PLAYER_DYOFF
+	ldx #$00
+@toploop:
 
-@xy_done:
+	ldy #$00
+	lda player_state + PLAYER_YOFF + 1, x
+	; Top of player
+	sec
+	sbc #PLAYER_H/2
+	cmp playfield_top 	; if (player.y < playfield_top)
+	bcc @snap_top
+	; Add to get the bottom of the player
+	clc
+	adc #PLAYER_H
+	cmp playfield_bottom	; else if (player.y > playfield_top)
+	beq @snap_bottom
+	bcs @snap_bottom
+	bcc @x_check		; else { goto x_check }
 
+@snap_top:
+	; If so, snap to top of playfield
+	lda playfield_top
+	clc
+	adc #PLAYER_H/2
+	sta player_state + PLAYER_YOFF + 1, x
+	sty player_state + PLAYER_YOFF, x
+	jmp @x_check
+
+@snap_bottom:
+	; If so, snap to bottom of playfield
+	lda playfield_bottom
+	sec
+	sbc #PLAYER_H/2
+	sta player_state + PLAYER_YOFF + 1, x
+	sty player_state + PLAYER_YOFF, x
+	jmp @x_check
+
+@x_check:
+
+	ldy #$00
+	lda player_state + PLAYER_XOFF + 1, x
+	; Left of player
+	sec
+	sbc #PLAYER_W/2
+	cmp playfield_left 	; if (player.x < playfield_left)
+	bcc @snap_left
+	; Add to get the right of the player
+	clc
+	adc #PLAYER_W
+	cmp playfield_right	; else if (player.x > playfield_right)
+	beq @snap_right
+	bcs @snap_right
+	bcc @postloop		; else { goto postloop }
+
+@snap_left:
+	; If so, snap to top of playfield
+	lda playfield_left
+	clc
+	adc #PLAYER_W/2
+	sta player_state + PLAYER_XOFF + 1, x
+	sty player_state + PLAYER_XOFF, x
+	jmp @postloop
+
+@snap_right:
+	; If so, snap to bottom of playfield
+	lda playfield_right
+	sec
+	sbc #PLAYER_W/2
+	sta player_state + PLAYER_XOFF + 1, x
+	sty player_state + PLAYER_XOFF, x
+	jmp @postloop
+
+@postloop:
+	cpx #$00
+	bne @endloop
+	ldx #PLAYER_SIZE
+	bne @toploop
+
+@endloop:
 	rts
 
 ; ====================================================

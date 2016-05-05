@@ -319,6 +319,7 @@ player_draw:
 	sec
 	sbc yscroll			; Factor in scrolling position
 	sta OAM_BASE, y
+	sta temp4
 	iny				; Y = OAM tile select
 
 	lda (addr_ptr), y
@@ -340,6 +341,17 @@ player_draw:
 	ror a
 	ror a
 	ror a
+
+					; Is sprite below the fence height?
+					; If so, set priority to behind BG
+	sty temp3
+	ldy temp4
+	cpy #FENCE_SPR_Y
+	bcc :+
+	ora #%00100000
+:
+	ldy temp3
+
 	sta OAM_BASE, y
 	iny				; Y = OAM X position
 
