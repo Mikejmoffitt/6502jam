@@ -118,92 +118,89 @@ girl_mapping_up2:
 ; 	Padding			(.byte)
 
 girl_anim_stand_fwd:
-	.byte 1
-	.byte 0
+	.byte	1
+	.byte	0
 
-	.addr girl_mapping_fwd0
-	.byte 128
-	.byte 0
+	.addr	girl_mapping_fwd0
+	.byte	128
+	.byte	0
 
 girl_anim_stand_up:
-	.byte 1
-	.byte 0
+	.byte	1
+	.byte	0
 
-	.addr girl_mapping_up0
-	.byte 128
-	.byte 0
+	.addr	girl_mapping_up0
+	.byte	128
+	.byte	0
 
 girl_anim_stand_down:
-	.byte 1
-	.byte 0
+	.byte	1
+	.byte	0
 
-	.addr girl_mapping_down0
-	.byte 128
-	.byte 0
+	.addr	girl_mapping_down0
+	.byte	128
+	.byte	0
 
 girl_anim_run_fwd:
 	.byte	4
 	.byte	0
 
 	.addr	girl_mapping_fwd1 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_fwd0 ; ------------
-	.byte	5
-	.byte	0
+	.byte	5, 0
+
 	.addr	girl_mapping_fwd2 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_fwd0 ; ------------
-	.byte	5
-	.byte	0
+	.byte	5, 0
 
 girl_anim_run_up:
-	.byte 4
-	.byte 0
+	.byte	4
+	.byte	0
 
 	.addr	girl_mapping_up1 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_up0 ; ------------
-	.byte	7
-	.byte	0
+	.byte	5, 0
+
 	.addr	girl_mapping_up2 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_up0 ; ------------
-	.byte	7
-	.byte	0
+	.byte	5, 0
 
 girl_anim_run_down:
-	.byte 4
-	.byte 0
+	.byte	4
+	.byte	0
 
 	.addr	girl_mapping_down1 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_down0 ; ------------
-	.byte	7
-	.byte	0
+	.byte	5, 0
+
 	.addr	girl_mapping_down2 ; ------------
-	.byte	7
-	.byte	0
+	.byte	7, 0
+
 	.addr	girl_mapping_down0 ; ------------
-	.byte	7
-	.byte	0
+	.byte	5, 0
 
-	
 
-; An array containing the addresses of animation numbers. Used to map animation
+; ============ Animation Number Map ====================
+; An array containing the addresses of animation numbers. Used to
 ; number to an animation script.
 
 girl_anim_num_map:
-	.addr girl_anim_stand_fwd
-	.addr girl_anim_stand_up
-	.addr girl_anim_stand_down
-	.addr girl_anim_run_fwd
-	.addr girl_anim_run_up
-	.addr girl_anim_run_down
+	.addr	girl_anim_stand_fwd
+	.addr	girl_anim_stand_up
+	.addr	girl_anim_stand_down
+	.addr	girl_anim_run_fwd
+	.addr	girl_anim_run_up
+	.addr	girl_anim_run_down
 
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
@@ -213,9 +210,9 @@ girl_anim_num_map:
 ; Physics constants
 ;	fix16: Walk speed (Orthagonal)
 ;	fix16: Walk speed (Diagonal); should be orthagonal * 0.707
-;	fix16: Dash strength 
+;	fix16: Dash strength
 ;	fix16: Dash decel magnitude
-;	fix16: Throw strength 
+;	fix16: Throw strength
 ;	fix16: Throw time-stale factor
 
 girl_stats:

@@ -38,10 +38,8 @@ nmi_vector:
 	pha
 	tya
 	pha
-
-	ldx frame_counter		; Update frame counter
-	inx
-	stx frame_counter
+	
+	inc frame_counter		; Update frame counter
 
 	lda #$00
 	sta PPUCTRL			; Disable NMI
