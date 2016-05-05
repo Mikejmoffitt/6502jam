@@ -26,7 +26,7 @@ players_draw:
 	cpx #$0
 	bne @draw_finished
 	ldx #PLAYER_SIZE
-	jmp @player_loop
+	bne @player_loop
 
 ; --- End of loop ---
 @draw_finished:

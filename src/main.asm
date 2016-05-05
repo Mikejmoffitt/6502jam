@@ -213,6 +213,7 @@ main_entry:
 ; Run a tick of physics
 	jsr disc_move
 	jsr players_move
+	jsr players_check_disc
 
 ; Render from new result
 	jsr disc_draw

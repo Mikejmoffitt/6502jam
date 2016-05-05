@@ -6,11 +6,23 @@ DISC_W = $0c
 DISC_MAX_Z = $1c
 DISC_SPR_NUM = 10
 DISC_SHADOW_SPR_NUM = 50
+DISC_NOMINAL_Z = $07
+
+DISC_XOFF = $00
+DISC_YOFF = $02
+DISC_ZOFF = $04
+DISC_DXOFF = $06
+DISC_DYOFF = $08
+DISC_DZOFF = $0a
+DISC_ANIM_OFF = $0c
 
 ; ============================
 ;  Initialize disc
 ; ============================
 disc_init:
+	lda #$80
+	sta disc_y+1
+	sta disc_x+1
 	lda #$00
 	sta disc_y
 	sta disc_x
@@ -20,9 +32,12 @@ disc_init:
 	sta disc_dx+1
 	sta disc_dz
 	sta disc_dz+1
-	lda #$80
-	sta disc_y+1
-	sta disc_x+1
+	lda #DISC_NOMINAL_Z
+	sta disc_z+1
+
+	lda #$40
+	sta disc_dx
+	sta disc_dy
 	rts
 
 ; ============================
@@ -30,42 +45,10 @@ disc_init:
 ; ============================
 
 disc_move:
-	key_down pad_2, btn_start
-	lda #$00
-	sta disc_dz
-	sta disc_dz+1
-	sta disc_dy
-	sta disc_dy+1
-	sta disc_dx
-	sta disc_dx+1
-:
-	key_isdown pad_2, btn_up
-	sub16 disc_dy, #$08
-:
-	key_isdown pad_2, btn_down
-	add16 disc_dy, #$08
-:
-	key_isdown pad_2, btn_left
-	sub16 disc_dx, #$08
-:
-	key_isdown pad_2, btn_right
-	add16 disc_dx, #$08
-:
-	key_isdown pad_2, btn_a
-	add16 disc_dz, #$10
-:
-	key_isdown pad_2, btn_b
-	sub16 disc_dz, #$10
-:
-
-
-	sub16 disc_dz, #$03
 	; Apply vectors
 	sum16 disc_x, disc_dx
 	sum16 disc_y, disc_dy
 	sum16 disc_z, disc_dz
-
-	ldx #$00
 
 	; Check that the disc is moving upwards first
 	lda disc_dy+1

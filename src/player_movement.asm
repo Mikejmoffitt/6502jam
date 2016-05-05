@@ -1,6 +1,87 @@
 ; Movement and physucs-related player code
 
-; Move players about based on vector variables
+; ========================================
+; Collision checks against disc 
+; No preconditions.
+players_check_disc:
+	ldx #$00
+	jsr player_check_disc
+	rts
+
+@toploop:
+
+@postloop:
+	cpx #$00
+	bne @endloop
+	ldx #PLAYER_SIZE
+	bne @toploop
+
+@endloop:
+	rts
+
+
+; ========================================
+; Check one player against the disc.
+; Preconditions:
+;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
+player_check_disc:
+	; Check left of disc against right of player
+	lda disc_state + DISC_XOFF + 1
+	sec
+	sbc DISC_W
+	clc
+	adc PLAYER_W
+
+	cmp player_state + PLAYER_XOFF + 1, x
+	beq @nocollision
+	bcs @nocollision
+
+	; Check right of disc against left of player
+	lda disc_state + DISC_XOFF + 1
+	clc
+	adc DISC_W
+	sec
+	sbc PLAYER_W
+
+	cmp player_state + PLAYER_XOFF + 1, x
+	bcc @nocollision
+
+	; Check top of disc against bottom of player
+	lda disc_state + DISC_YOFF + 1
+	sec
+	sbc DISC_H
+	clc
+	adc PLAYER_H
+
+	cmp player_state + PLAYER_YOFF + 1, x
+	beq @nocollision
+	bcs @nocollision
+
+	; Check bottom of disc against top of player
+	lda disc_state + DISC_YOFF + 1
+	clc
+	adc DISC_H
+	sec
+	sbc PLAYER_H
+
+	cmp player_state + PLAYER_YOFF + 1, x
+	bcc @nocollision
+
+	lda #$1F
+	sta disc_z+1
+
+
+@nocollision:
+	lda #$00
+	sta disc_z+1
+	
+	rts
+
+
+; ========================================
+; Player movement routine
+; ========================================
+
 players_move:
 
 	sum16 player_state+PLAYER_XOFF, player_state+PLAYER_DXOFF
@@ -33,7 +114,7 @@ players_handle_input:
 	cpx #$00			; Did we just check player 1?
 	bne @endloop 			; If not, we're done here (both done)
 	ldx #PLAYER_SIZE		; Now it's time to check player 2's
-	jmp @toploop
+	bne @toploop
 @endloop:
 	rts
 
