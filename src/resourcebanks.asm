@@ -5,13 +5,17 @@
 .segment "BANK0"
 
 gfx1:
-.incbin "assets/gfx1.chr"
+	.incbin "assets/gfx1.chr"
 
 ; Nametables, palettes
 .segment "BANK1"
 
 field1_table:
-.incbin "assets/field1.nam"
+	.incbin "assets/field1.nam"
 
 palettes:
-.incbin "assets/gfx1.dat"
+	.incbin "assets/gfx1.dat"
+
+; Player graphics
+.segment "BANK2"
+	.include "player_gfx.asm"
