@@ -1,6 +1,6 @@
 
-PLAYER_W = $08
-PLAYER_H = $10
+PLAYER_W = $0c
+PLAYER_H = $08
 
 PLAYER_SPR_NUM = 18
 

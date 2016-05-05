@@ -6,17 +6,8 @@
 players_check_disc:
 	ldx #$00
 	jsr player_check_disc
-	rts
-
-@toploop:
-
-@postloop:
-	cpx #$00
-	bne @endloop
 	ldx #PLAYER_SIZE
-	bne @toploop
-
-@endloop:
+	jsr player_check_disc
 	rts
 
 
@@ -26,54 +17,64 @@ players_check_disc:
 ;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
 player_check_disc:
 	; Check left of disc against right of player
+	lda player_state + PLAYER_XOFF + 1, x
+	clc
+	adc #PLAYER_W/2
+	sta temp
+
 	lda disc_state + DISC_XOFF + 1
 	sec
-	sbc DISC_W
-	clc
-	adc PLAYER_W
+	sbc #DISC_W/2
 
-	cmp player_state + PLAYER_XOFF + 1, x
+	cmp temp
 	beq @nocollision
 	bcs @nocollision
 
 	; Check right of disc against left of player
+	lda player_state + PLAYER_XOFF + 1, x
+	sec
+	sbc #PLAYER_W/2
+	sta temp
+
 	lda disc_state + DISC_XOFF + 1
 	clc
-	adc DISC_W
-	sec
-	sbc PLAYER_W
+	adc #DISC_W/2
 
-	cmp player_state + PLAYER_XOFF + 1, x
+	cmp temp
 	bcc @nocollision
 
 	; Check top of disc against bottom of player
+	lda player_state + PLAYER_YOFF + 1, x
+	clc
+	adc #PLAYER_H/2
+	sta temp
+
 	lda disc_state + DISC_YOFF + 1
 	sec
-	sbc DISC_H
-	clc
-	adc PLAYER_H
+	sbc #DISC_H/2
 
-	cmp player_state + PLAYER_YOFF + 1, x
+	cmp temp
 	beq @nocollision
 	bcs @nocollision
 
 	; Check bottom of disc against top of player
+	lda player_state + PLAYER_YOFF + 1, x
+	sec
+	sbc #PLAYER_H/2
+	sta temp
+
 	lda disc_state + DISC_YOFF + 1
 	clc
-	adc DISC_H
-	sec
-	sbc PLAYER_H
+	adc #DISC_H/2
 
-	cmp player_state + PLAYER_YOFF + 1, x
+	cmp temp
 	bcc @nocollision
 
-	lda #$1F
-	sta disc_z+1
+; Collision:
 
+	
 
 @nocollision:
-	lda #$00
-	sta disc_z+1
 	
 	rts
 
