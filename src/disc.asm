@@ -114,6 +114,7 @@ disc_move:
 	sec
 	sbc #(DISC_W/2)		     ;
 	sta disc_x+1		    ;X clamping
+	ldx #$00
 	stx disc_x
 	stx disc_dx+1
 	stx disc_dx

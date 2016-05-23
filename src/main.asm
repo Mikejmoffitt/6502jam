@@ -1,8 +1,7 @@
 .include "header.asm"
 .include "cool_macros.asm"
-.include "zeropage.asm"
-.include "resourcebanks.asm"
 .include "ram.asm"
+.include "resourcebanks.asm"
 
 PLAYFIELD_HEIGHT = $b0
 PLAYFIELD_Y      = $40
