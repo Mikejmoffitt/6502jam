@@ -10,3 +10,4 @@ map.txt
 src/*.swp
 *.cdl
 assets/cmaps/*.swp
+labels.txt
