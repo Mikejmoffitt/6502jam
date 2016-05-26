@@ -54,5 +54,11 @@ game_state:
 	playfield_bottom:		.res 1
 	playfield_left:			.res 1
 	playfield_right:		.res 1
+	playfield_center:		.res 1
+
+; Additional player state that does not need to be in ZP
+player_ex:
+	.res PLAYER_SIZE
+	.res PLAYER_SIZE
 
 

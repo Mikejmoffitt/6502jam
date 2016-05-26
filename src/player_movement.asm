@@ -80,16 +80,20 @@ player_check_disc:
 
 
 ; ========================================
-; Player movement routine
+; Player top-level movement routine
 ; No pre-entry conditions
 ; ========================================
 
 players_move:
 
+	; Process basic newtonian movement for both players
 	sum16 player_state+PLAYER_XOFF, player_state+PLAYER_DXOFF
 	sum16 player_state+PLAYER_YOFF, player_state+PLAYER_DYOFF
+
 	sum16 player_state+PLAYER_SIZE+PLAYER_XOFF, player_state+PLAYER_SIZE+PLAYER_DXOFF
 	sum16 player_state+PLAYER_SIZE+PLAYER_YOFF, player_state+PLAYER_SIZE+PLAYER_DYOFF
+
+	; Now, do bounds checks
 	ldx #$00
 @toploop:
 
@@ -128,9 +132,12 @@ players_move:
 
 @x_check:
 
+	cpx #$00		; Are we checking P1?
+	bne @p2_xcheck		; If not, go to P2 check section 
+
+	; Left of player
 	ldy #$00
 	lda player_state + PLAYER_XOFF + 1, x
-	; Left of player
 	sec
 	sbc #PLAYER_W/2
 	cmp playfield_left 	; if (player.x < playfield_left)
@@ -138,7 +145,7 @@ players_move:
 	; Add to get the right of the player
 	clc
 	adc #PLAYER_W
-	cmp playfield_right	; else if (player.x > playfield_right)
+	cmp playfield_center	; else if (player.x > playfield_right)
 	beq @snap_right
 	bcs @snap_right
 	bcc @postloop		; else { goto postloop }
@@ -154,6 +161,40 @@ players_move:
 
 @snap_right:
 	; If so, snap to bottom of playfield
+	lda playfield_center
+	sec
+	sbc #PLAYER_W/2
+	sta player_state + PLAYER_XOFF + 1, x
+	sty player_state + PLAYER_XOFF, x
+	jmp @postloop
+
+@p2_xcheck:
+	; Left of playebr
+	ldy #$00
+	lda player_state + PLAYER_XOFF + 1, x
+	sec
+	sbc #PLAYER_W/2
+	cmp playfield_center 	; if (player.x < playfield_left)
+	bcc @snap_left_p2
+	; Add to get the right of the player
+	clc
+	adc #PLAYER_W
+	cmp playfield_right	; else if (player.x > playfield_right)
+	beq @snap_right_p2
+	bcs @snap_right_p2
+	bcc @postloop		; else { goto postloop }
+
+@snap_left_p2:
+	; If so, snap to top of playfield
+	lda playfield_center
+	clc
+	adc #PLAYER_W/2
+	sta player_state + PLAYER_XOFF + 1, x
+	sty player_state + PLAYER_XOFF, x
+	jmp @postloop
+
+@snap_right_p2:
+	; If so, snap to bottom of playfield
 	lda playfield_right
 	sec
 	sbc #PLAYER_W/2
@@ -165,7 +206,7 @@ players_move:
 	cpx #$00
 	bne @endloop
 	ldx #PLAYER_SIZE
-	bne @toploop
+	jmp @toploop	
 
 @endloop:
 	rts
@@ -201,6 +242,7 @@ players_handle_input:
 ;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
 ; Postconditions:
 ;	Player state struct has been modified based on D-Pad inputs
+; ====================================================
 players_input_dpad:
 @handle_accel_top:			; Top of this loop, run twice
 	cpx #$00			; Which player?

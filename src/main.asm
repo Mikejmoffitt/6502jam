@@ -171,6 +171,15 @@ playfield_init:
 	lda #(PLAYFIELD_Y + PLAYFIELD_HEIGHT)
 	sta playfield_bottom
 
+	lda playfield_left
+	lsr a
+	sta temp
+	lda playfield_right
+	lsr a
+	clc
+	adc temp
+	sta playfield_center
+
 	; Player sprite test graphics
 	bank_load #$00
 	; Sprites

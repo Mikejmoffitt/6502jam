@@ -21,6 +21,8 @@ ANIM_RUN_DOWN	= $05
 
 
 ; Struct access offsets
+
+; Basic movement variables
 PLAYER_XOFF = $00
 PLAYER_YOFF = $02
 PLAYER_DXOFF = $04
@@ -28,21 +30,29 @@ PLAYER_DYOFF = $06
 PLAYER_NUMOFF = $08
 PLAYER_DIRXOFF = $09
 PLAYER_DIRYOFF = $0a
-PLAYER_SLIDE_CNTOFF = $0b
-PLAYER_BLOCK_CNTOFF = $0c
-PLAYER_SPR_NUMOFF = $0d
+PLAYER_FACINGOFF = $0b
 
-PLAYER_ANIM_MAPOFF = $0e		; Animation MAP table; MUST be right before anim_addr
-PLAYER_ANIM_ADDROFF = $10		; Address of animation script
-PLAYER_ANIM_TABLEOFF = $12		; Address of table of animations to use
-PLAYER_ANIM_FRAMEOFF = $13		; Currently displayed frame of animation
-PLAYER_ANIM_CNTOFF = $14		; Countup for frame duration; When cnt == len, frame++
-PLAYER_ANIM_LENOFF = $15		; Anim length; When frame == len, frame <= 0.
-PLAYER_ANIM_NUMOFF = $16
+; Animation scripting variables
+PLAYER_SPR_NUMOFF = $0c
+PLAYER_ANIM_MAPOFF = $0d		; Animation MAP table; MUST be right before anim_addr
+PLAYER_ANIM_ADDROFF = $0f		; Address of animation script
+PLAYER_ANIM_TABLEOFF = $11		; Address of table of animations to use
+PLAYER_ANIM_FRAMEOFF = $12		; Currently displayed frame of animation
+PLAYER_ANIM_CNTOFF = $13		; Countup for frame duration; When cnt == len, frame++
+PLAYER_ANIM_LENOFF = $14		; Anim length; When frame == len, frame <= 0.
+PLAYER_ANIM_NUMOFF = $15
 
-PLAYER_FACINGOFF = $17
 
-PLAYER_STATS_ADDROFF = $18		; Pointer to stats block
+PLAYER_STATS_ADDROFF = $16		; Pointer to stats block
+
+; Gameplay player variables
+PLAYER_SLIDE_CNTOFF = $20		; When nonzero, decremnts when dx and dy == 0, 
+					; restoring control once it reaches zero.
+PLAYER_BLOCK_CNTOFF = $21		; Decrements; halts player and locks control
+					; until it reaches zero. 
+PLAYER_CHARGE_CNTOFF = $22		; Counts upwards when the player is under the disc's
+					; drop target. Controls lock when non-zero, dx/dy zeroed.
+
 
 .include "../assets/cmaps/girl.asm"
 
