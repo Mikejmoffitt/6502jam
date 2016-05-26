@@ -78,25 +78,20 @@ player_check_disc:
 	
 	rts
 
+; ===============================================
+; Player movement support function
+; Constrains the player in X to their respective
+; movement boundaries. 
+; Pre-conditions:
+;	X is loaded with player struct offset
+;	Temp is loaded with the left boundary
+;	Temp2 is loaded with the right boundary
+; Post-conditions:
+;	Player position is snapped to any exceeded side of the field.
+; ===============================================
+player_check_bounds:
 
-; ========================================
-; Player top-level movement routine
-; No pre-entry conditions
-; ========================================
-
-players_move:
-
-	; Process basic newtonian movement for both players
-	sum16 player_state+PLAYER_XOFF, player_state+PLAYER_DXOFF
-	sum16 player_state+PLAYER_YOFF, player_state+PLAYER_DYOFF
-
-	sum16 player_state+PLAYER_SIZE+PLAYER_XOFF, player_state+PLAYER_SIZE+PLAYER_DXOFF
-	sum16 player_state+PLAYER_SIZE+PLAYER_YOFF, player_state+PLAYER_SIZE+PLAYER_DYOFF
-
-	; Now, do bounds checks
-	ldx #$00
-@toploop:
-
+@y_check:
 	ldy #$00
 	lda player_state + PLAYER_YOFF + 1, x
 	; Top of player
@@ -128,31 +123,27 @@ players_move:
 	sbc #PLAYER_H/2
 	sta player_state + PLAYER_YOFF + 1, x
 	sty player_state + PLAYER_YOFF, x
-	jmp @x_check
+	; jmp @x_check
 
 @x_check:
-
-	cpx #$00		; Are we checking P1?
-	bne @p2_xcheck		; If not, go to P2 check section 
-
 	; Left of player
 	ldy #$00
 	lda player_state + PLAYER_XOFF + 1, x
 	sec
 	sbc #PLAYER_W/2
-	cmp playfield_left 	; if (player.x < playfield_left)
+	cmp temp	 	; if (player.x < playfield_left)
 	bcc @snap_left
 	; Add to get the right of the player
 	clc
 	adc #PLAYER_W
-	cmp playfield_center	; else if (player.x > playfield_right)
+	cmp temp2		; else if (player.x > playfield_right)
 	beq @snap_right
 	bcs @snap_right
 	bcc @postloop		; else { goto postloop }
 
 @snap_left:
 	; If so, snap to top of playfield
-	lda playfield_left
+	lda temp
 	clc
 	adc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
@@ -161,50 +152,70 @@ players_move:
 
 @snap_right:
 	; If so, snap to bottom of playfield
-	lda playfield_center
+	lda temp2
 	sec
 	sbc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
 	sty player_state + PLAYER_XOFF, x
-	jmp @postloop
 
-@p2_xcheck:
-	; Left of playebr
-	ldy #$00
+@postloop:
+	rts
+
+; ========================================
+; Player movement support function
+; Increments/Decrements counters, and affects player movement.
+; Pre-conditions:
+;	X is loaded with player struct offset
+; Post-conditions:
+;	Player counters modified, movement potentially halted.
+; ========================================
+player_counters:
+	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	rts
+
+; ========================================
+; Player top-level movement routine
+; No pre-entry conditions
+; ========================================
+
+players_move:
+
+	ldx #$00
+	lda playfield_left
+	sta temp
+	lda playfield_center
+	sta temp2
+@toploop:
+
+	jsr player_counters
+
+	; Process basic newtonian movement for both players
+	clc
+	lda player_state + PLAYER_XOFF, x
+	adc player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_XOFF, x
 	lda player_state + PLAYER_XOFF + 1, x
-	sec
-	sbc #PLAYER_W/2
-	cmp playfield_center 	; if (player.x < playfield_left)
-	bcc @snap_left_p2
-	; Add to get the right of the player
-	clc
-	adc #PLAYER_W
-	cmp playfield_right	; else if (player.x > playfield_right)
-	beq @snap_right_p2
-	bcs @snap_right_p2
-	bcc @postloop		; else { goto postloop }
-
-@snap_left_p2:
-	; If so, snap to top of playfield
-	lda playfield_center
-	clc
-	adc #PLAYER_W/2
+	adc player_state + PLAYER_DXOFF + 1, x
 	sta player_state + PLAYER_XOFF + 1, x
-	sty player_state + PLAYER_XOFF, x
-	jmp @postloop
 
-@snap_right_p2:
-	; If so, snap to bottom of playfield
-	lda playfield_right
-	sec
-	sbc #PLAYER_W/2
-	sta player_state + PLAYER_XOFF + 1, x
-	sty player_state + PLAYER_XOFF, x
-	jmp @postloop
+	clc
+	lda player_state + PLAYER_YOFF, x
+	adc player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_YOFF, x
+	lda player_state + PLAYER_YOFF + 1, x
+	adc player_state + PLAYER_DYOFF + 1, x
+	sta player_state + PLAYER_YOFF + 1, x
+
+	jsr player_check_bounds
 
 @postloop:
 	cpx #$00
 	bne @endloop
+	; Change X bounds for Player 2's loop
+	lda playfield_right 
+	sta temp2
+	lda playfield_center
+	sta temp
 	ldx #PLAYER_SIZE
 	jmp @toploop	
 
