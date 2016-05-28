@@ -219,7 +219,7 @@ girl_stats:
 	.word	300	; Straight walk speed
 	.word	212	; Diagonal walk speed
 	.word	512	; Dash strength
-	.word	192	; Dash decal magnitude due to friction
+	.word	16	; Dash decal magnitude due to friction
 	.word	640	; Max throw strength
 	.word	40	; Throw time-stale factor
 

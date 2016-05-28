@@ -16,7 +16,7 @@ players_check_disc:
 ; Preconditions:
 ;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
 player_check_disc:
-	; Check left of disc against right of player
+; Check left of disc against right of player
 	lda player_state + PLAYER_XOFF + 1, x
 	clc
 	adc #PLAYER_W/2
@@ -30,7 +30,7 @@ player_check_disc:
 	beq @nocollision
 	bcs @nocollision
 
-	; Check right of disc against left of player
+; Check right of disc against left of player
 	lda player_state + PLAYER_XOFF + 1, x
 	sec
 	sbc #PLAYER_W/2
@@ -43,7 +43,7 @@ player_check_disc:
 	cmp temp
 	bcc @nocollision
 
-	; Check top of disc against bottom of player
+; Check top of disc against bottom of player
 	lda player_state + PLAYER_YOFF + 1, x
 	clc
 	adc #PLAYER_H/2
@@ -57,7 +57,7 @@ player_check_disc:
 	beq @nocollision
 	bcs @nocollision
 
-	; Check bottom of disc against top of player
+; Check bottom of disc against top of player
 	lda player_state + PLAYER_YOFF + 1, x
 	sec
 	sbc #PLAYER_H/2
@@ -70,12 +70,73 @@ player_check_disc:
 	cmp temp
 	bcc @nocollision
 
-; Collision:
-
-	
+; Collision:	
 
 @nocollision:
 	
+	rts
+
+; ==============================================
+; Player deceleration routine. Used for when sliding.
+; Pre-conditions:
+;	X is loaded with player struct offset
+; Post-conditions:
+;	Player's dx/dy have been attenuated
+; ==============================================
+player_decel:
+	sta $5555 ; debug poke
+; Set up addr_ptr with player stats struct
+	lda player_state + PLAYER_STATS_ADDROFF, x
+	sta addr_ptr
+	lda player_state + PLAYER_STATS_ADDROFF + 1, x
+	sta addr_ptr + 1
+
+; Load temp.w with deceleration amount
+	ldy #$06
+	lda (addr_ptr), y
+	sta temp
+	iny
+	lda #$00
+	lda (addr_ptr), y
+	sta temp2
+
+; Check sign of dx
+	lda player_state + PLAYER_DXOFF + 1, x
+	bpl @dx_pos
+@dx_neg:
+; Subtract temp.w from dx.w
+	sec
+	lda player_state + PLAYER_DXOFF, x
+	sbc temp
+	sta player_state + PLAYER_DXOFF, x
+	lda player_state + PLAYER_DXOFF + 1, x
+	sbc temp + 1
+	sta player_state + PLAYER_DXOFF + 1, x
+; If dx has gone positive, zero it out.
+	bmi @dx_final
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF + 1, x
+	jmp @dx_final
+
+@dx_pos:
+; Add temp.w to dx.w
+	clc
+	lda player_state + PLAYER_DXOFF, x
+	adc temp
+	sta player_state + PLAYER_DXOFF, x
+	lda player_state + PLAYER_DXOFF + 1, x
+	adc temp + 1
+	sta player_state + PLAYER_DXOFF + 1, x
+; If dx has gone negative, zero it out.
+	bpl @dx_final
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF + 1, x
+	jmp @dx_final
+
+@dx_final:
+; TODO: Above logic, with Dy
 	rts
 
 ; ===============================================
@@ -170,24 +231,44 @@ player_check_bounds:
 ;	Player counters modified, movement potentially halted.
 ; ========================================
 player_counters:
+
+; Only decrement the slide counter if the player is not in motion.
+	lda player_state + PLAYER_DXOFF, x
+	ora player_state + PLAYER_DXOFF + 1, x
+	ora player_state + PLAYER_DYOFF, x
+	ora player_state + PLAYER_DYOFF + 1, x
+	beq @ignore_slide
+
+; Decrement the slide counter
 	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	beq :+
+	dec player_state + PLAYER_SLIDE_CNTOFF, x
+:
+@ignore_slide:
+; Decrement the block counter
+	lda player_state + PLAYER_BLOCK_CNTOFF, x
+	beq :+
+	dec player_state + PLAYER_BLOCK_CNTOFF, x
+:
+; Decrement the throw counter
+	lda player_state + PLAYER_THROW_CNTOFF, x
+	beq :+
+	dec player_state + PLAYER_THROW_CNTOFF, x
+:
 	rts
 
 ; ========================================
 ; Player top-level movement routine
 ; No pre-entry conditions
 ; ========================================
-
 players_move:
-
 	ldx #$00
 	lda playfield_left
 	sta temp
 	lda playfield_center
 	sta temp2
-@toploop:
 
-	jsr player_counters
+@toploop:
 
 	; Process basic newtonian movement for both players
 	clc
@@ -206,7 +287,16 @@ players_move:
 	adc player_state + PLAYER_DYOFF + 1, x
 	sta player_state + PLAYER_YOFF + 1, x
 
+	; If slide count is > 0, run decelleration
+	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	beq @no_decel
+
+	jsr player_decel
+
+@no_decel:
+
 	jsr player_check_bounds
+	jsr player_counters
 
 @postloop:
 	cpx #$00
@@ -233,18 +323,174 @@ players_handle_input:
 @toploop:
         lda player_state + PLAYER_SLIDE_CNTOFF, x	;Is the player sliding?
         cmp #$00			; If so,
-        bne @post_dpad			; Skip input handling
+        bne @post_inputs		; Skip input handling
 
 @normal_state_inputs:
 	jsr players_input_dpad	
+	jsr players_input_buttons
 
 ; --- End of Loop ---
-@post_dpad:
+@post_inputs:
 	cpx #$00			; Did we just check player 1?
 	bne @endloop 			; If not, we're done here (both done)
 	ldx #PLAYER_SIZE		; Now it's time to check player 2's
 	bne @toploop
 @endloop:
+	rts
+
+; ====================================================
+; A/B buttons subroutine for the input handler
+; Preconditions:
+;	X is loaded with the offset for the player
+; Postconditions:
+;	Player has slide or block counters set based on inputs
+; ====================================================
+players_input_buttons:
+
+
+; If either counter is non-zero, don't accept inputs here
+	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	beq :+
+	rts
+:
+; Blocking counter
+	lda player_state + PLAYER_BLOCK_CNTOFF, x
+	beq :+
+	rts
+:
+; If the player is charging, don't accept inputs
+	lda player_state + PLAYER_CHARGE_CNTOFF, x
+	beq :+
+	rts
+:
+
+; Load appropriate pad for P1 or P2 into temp and temp2
+	cpx #$00
+	bne @p2_check
+	lda pad_1
+	sta temp
+	lda pad_1_prev
+	sta temp2
+	jmp @check_a_button
+
+@p2_check:
+	lda pad_2
+	sta temp
+	lda pad_2_prev
+	sta temp2
+
+@check_a_button:
+	; Has A just been pressed?
+	lda temp
+	bit btn_a
+	beq @not_a
+	lda temp2
+	bit btn_a
+	bne @not_a
+	beq @a_pressed
+@not_a:
+	rts
+
+@a_pressed:
+
+; Check if the player is moving
+; At this point, A = 0 (otherwise we would not be here)
+	lda player_state + PLAYER_DXOFF, x
+	ora player_state + PLAYER_DXOFF + 1, x
+	ora player_state + PLAYER_DYOFF, x
+	ora player_state + PLAYER_DYOFF + 1, x
+
+; If dx or dy are nonzero, modify the slide counter.
+	bne @do_slide
+
+; Otherwise, we'll set the block counter and halt the player.
+@do_block:
+	lda #(PLAYER_BLOCK_DELAY)
+	sta player_state + PLAYER_BLOCK_CNTOFF, x
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF + 1, x
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF + 1, x
+	rts
+
+@do_slide:
+; Set the slide counter, and launch the player.
+; TODO: Actually launch the player.
+
+; If the d-pad isn't being pressed, don't do anything.
+	lda temp
+	and #(BUTTON_RIGHT|BUTTON_LEFT|BUTTON_UP|BUTTON_DOWN)
+	beq @a_not_pressed
+
+; Set the counter.
+	lda #(PLAYER_SLIDE_DELAY)
+	sta player_state + PLAYER_SLIDE_CNTOFF, x
+
+; Set up addr_ptr with player stats struct
+	lda player_state + PLAYER_STATS_ADDROFF, x
+	sta addr_ptr
+	lda player_state + PLAYER_STATS_ADDROFF + 1, x
+	sta addr_ptr + 1
+
+; Launch the player
+	lda #$00
+	sta temp3			; Temp3 is a "invert dx" flag
+	sta temp4			; Temp4 is a "invert dy" flag
+	lda player_state + PLAYER_DXOFF + 1, x
+	bpl @x_pos
+	lda #$01
+	sta temp3			; Mark dx for inversion
+@x_pos:
+	lda player_state + PLAYER_DYOFF + 1, x
+	bpl @y_pos
+	lda #$01
+	sta temp4			; Mark dy for inversion
+@y_pos:
+	
+	; Load velocity for dx
+	ldy #$04			; 3rd word, for dash strength (LSB)
+	lda (addr_ptr), y
+	sta player_state + PLAYER_DXOFF, x
+	iny				; Now grab the MSB
+	lda (addr_ptr), y
+	sta player_state + PLAYER_DXOFF+1, x
+
+	;Invert DX if temp3 is set
+	lda temp3
+	beq @no_invert_dx
+	sec
+	lda #$00
+	sbc player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF, x
+	lda #$00
+	sbc player_state + PLAYER_DXOFF + 1, x
+	sta player_state + PLAYER_DXOFF + 1, x
+@no_invert_dx:
+
+	; Velocity to load into dy	
+	ldy #$04			; 3rd word, for dash strength (LSB)
+	lda (addr_ptr), y
+	sta player_state + PLAYER_DYOFF, x
+	iny				; Now grab the MSB
+	lda (addr_ptr), y
+	sta player_state + PLAYER_DYOFF+1, x
+
+	;Invert DX if temp3 is set
+	lda temp3
+	beq @no_invert_dy
+	sec
+	lda #$00
+	sbc player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF, x
+	lda #$00
+	sbc player_state + PLAYER_DYOFF + 1, x
+	sta player_state + PLAYER_DYOFF + 1, x
+
+@no_invert_dy:
+
+@a_not_pressed: 
+
 	rts
 
 ; ====================================================
@@ -255,6 +501,25 @@ players_handle_input:
 ;	Player state struct has been modified based on D-Pad inputs
 ; ====================================================
 players_input_dpad:
+; First check validity - if the player is blocking, sliding, charging, or 
+; throwing, ignore the dpad here.
+	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	beq :+
+	rts
+:
+	lda player_state + PLAYER_BLOCK_CNTOFF, x
+	beq :+
+	rts
+:
+	lda player_state + PLAYER_CHARGE_CNTOFF, x
+	beq :+
+	rts
+:
+	lda player_state + PLAYER_THROW_CNTOFF, x
+	beq :+
+	rts
+:
+
 @handle_accel_top:			; Top of this loop, run twice
 	cpx #$00			; Which player?
 	bne @p2_check			; Branch for player 2

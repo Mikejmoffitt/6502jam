@@ -19,6 +19,8 @@ ANIM_RUN_FWD	= $03
 ANIM_RUN_UP	= $04
 ANIM_RUN_DOWN	= $05
 
+PLAYER_BLOCK_DELAY = $0A
+PLAYER_SLIDE_DELAY = $07
 
 ; Struct access offsets
 
@@ -52,6 +54,7 @@ PLAYER_BLOCK_CNTOFF = $21		; Decrements; halts player and locks control
 					; until it reaches zero. 
 PLAYER_CHARGE_CNTOFF = $22		; Counts upwards when the player is under the disc's
 					; drop target. Controls lock when non-zero, dx/dy zeroed.
+PLAYER_THROW_CNTOFF = $23		; Counts down while player is in throwing animation.
 
 
 .include "../assets/cmaps/girl.asm"
