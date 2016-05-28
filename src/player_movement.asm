@@ -84,7 +84,6 @@ player_check_disc:
 ;	Player's dx/dy have been attenuated
 ; ==============================================
 player_decel:
-	sta $5555 ; debug poke
 ; Set up addr_ptr with player stats struct
 	lda player_state + PLAYER_STATS_ADDROFF, x
 	sta addr_ptr
@@ -99,27 +98,33 @@ player_decel:
 	lda #$00
 	lda (addr_ptr), y
 	sta temp2
+	sta $5555 ; debug poke
 
-; Check sign of dx
+; Put abs(dx+1) in temp3 to compare magnitude with dash
 	lda player_state + PLAYER_DXOFF + 1, x
-	bpl @dx_pos
-@dx_neg:
-; Subtract temp.w from dx.w
+	bpl @no_invert_dx
+	lda #$00
 	sec
-	lda player_state + PLAYER_DXOFF, x
-	sbc temp
-	sta player_state + PLAYER_DXOFF, x
-	lda player_state + PLAYER_DXOFF + 1, x
-	sbc temp + 1
-	sta player_state + PLAYER_DXOFF + 1, x
-; If dx has gone positive, zero it out.
-	bmi @dx_final
+	sbc player_state + PLAYER_DXOFF + 1, x
+
+@no_invert_dx:
+; Compare magnitude of dx to dash
+	cmp temp2
+	bcs @no_clamp_dx
 	lda #$00
 	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF + 1, x
 	jmp @dx_final
 
-@dx_pos:
+; Magnitude is less; do the deceleration.
+@no_clamp_dx:
+
+; Check sign of dx
+	lda player_state + PLAYER_DXOFF + 1, x
+	and #%10000000
+	beq @dx_pos
+
+@dx_neg:
 ; Add temp.w to dx.w
 	clc
 	lda player_state + PLAYER_DXOFF, x
@@ -128,10 +133,16 @@ player_decel:
 	lda player_state + PLAYER_DXOFF + 1, x
 	adc temp + 1
 	sta player_state + PLAYER_DXOFF + 1, x
-; If dx has gone negative, zero it out.
-	bpl @dx_final
-	lda #$00
+	jmp @dx_final
+
+@dx_pos:
+; Subtract temp.w from dx.w
+	sec
+	lda player_state + PLAYER_DXOFF, x
+	sbc temp
 	sta player_state + PLAYER_DXOFF, x
+	lda player_state + PLAYER_DXOFF + 1, x
+	sbc temp + 1
 	sta player_state + PLAYER_DXOFF + 1, x
 	jmp @dx_final
 
