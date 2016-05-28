@@ -84,6 +84,7 @@ player_check_disc:
 ;	Player's dx/dy have been attenuated
 ; ==============================================
 player_decel:
+	rts
 ; Set up addr_ptr with player stats struct
 	lda player_state + PLAYER_STATS_ADDROFF, x
 	sta addr_ptr
@@ -98,7 +99,6 @@ player_decel:
 	lda #$00
 	lda (addr_ptr), y
 	sta temp2
-	sta $5555 ; debug poke
 
 ; Put abs(dx+1) in temp3 to compare magnitude with dash
 	lda player_state + PLAYER_DXOFF + 1, x
@@ -432,10 +432,11 @@ players_input_buttons:
 ; If the d-pad isn't being pressed, don't do anything.
 	lda temp
 	and #(BUTTON_RIGHT|BUTTON_LEFT|BUTTON_UP|BUTTON_DOWN)
-	beq @a_not_pressed
+	beq @end_dir_check
 
 ; Set the counter.
 	lda #(PLAYER_SLIDE_DELAY)
+	lda #$20
 	sta player_state + PLAYER_SLIDE_CNTOFF, x
 
 ; Set up addr_ptr with player stats struct
@@ -445,61 +446,88 @@ players_input_buttons:
 	sta addr_ptr + 1
 
 ; Launch the player
-	lda #$00
-	sta temp3			; Temp3 is a "invert dx" flag
-	sta temp4			; Temp4 is a "invert dy" flag
-	lda player_state + PLAYER_DXOFF + 1, x
-	bpl @x_pos
-	lda #$01
-	sta temp3			; Mark dx for inversion
-@x_pos:
-	lda player_state + PLAYER_DYOFF + 1, x
-	bpl @y_pos
-	lda #$01
-	sta temp4			; Mark dy for inversion
-@y_pos:
-	
+	sta $5555 ; debug poke
+@right_check:
+	; Check if right is hold
+	lda temp
+	bit btn_right
+	beq @left_check ; if we're not holding right, check for left
+
 	; Load velocity for dx
 	ldy #$04			; 3rd word, for dash strength (LSB)
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
 	iny				; Now grab the MSB
 	lda (addr_ptr), y
-	sta player_state + PLAYER_DXOFF+1, x
+	sta player_state + PLAYER_DXOFF + 1, x
 
-	;Invert DX if temp3 is set
-	lda temp3
-	beq @no_invert_dx
+	; dx now contains positive slide velocity
+		
+	jmp @y_check
+
+@left_check:
+	; now check for left d-pad
+	bit btn_left
+	beq @no_dx ; if we're not holding left at this point, skip to up/down
+
+	; Load velocity for dx
+	ldy #$04			; 3rd word, for dash strength (LSB)
 	sec
 	lda #$00
-	sbc player_state + PLAYER_DXOFF, x
+	sbc (addr_ptr), y		; Negate it
 	sta player_state + PLAYER_DXOFF, x
+	iny				; Now grab the MSB
+	sec
 	lda #$00
-	sbc player_state + PLAYER_DXOFF + 1, x
+	sbc (addr_ptr), y		; Once more negate dx
 	sta player_state + PLAYER_DXOFF + 1, x
-@no_invert_dx:
 
-	; Velocity to load into dy	
+	; dx now contains negative slide velocity
+	
+	jmp @y_check
+		
+
+@no_dx:
+	; Zero out dx, because neither left nor right were held.
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF + 1, x
+
+@y_check:
+	; Re-load pad, A may have been mangled
+	lda temp 
+	; Check for up.
+	bit btn_up
+	beq @down_check
+
+	; Load velocity for dy
+	ldy #$04
+	sec
+	lda #$00
+	sbc (addr_ptr), y
+	sta player_state + PLAYER_DYOFF, x
+	iny
+	sec
+	lda #$00
+	sbc (addr_ptr), y
+	sta player_state + PLAYER_DYOFF + 1, x
+
+	jmp @end_dir_check
+
+@down_check:
+	
+	lda temp
+	bit btn_down
+	beq @end_dir_check
+
 	ldy #$04			; 3rd word, for dash strength (LSB)
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	iny				; Now grab the MSB
 	lda (addr_ptr), y
-	sta player_state + PLAYER_DYOFF+1, x
-
-	;Invert DX if temp3 is set
-	lda temp3
-	beq @no_invert_dy
-	sec
-	lda #$00
-	sbc player_state + PLAYER_DYOFF, x
-	sta player_state + PLAYER_DYOFF, x
-	lda #$00
-	sbc player_state + PLAYER_DYOFF + 1, x
 	sta player_state + PLAYER_DYOFF + 1, x
 
-@no_invert_dy:
-
+@end_dir_check:
 @a_not_pressed: 
 
 	rts
