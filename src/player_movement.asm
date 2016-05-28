@@ -104,15 +104,14 @@ player_decel:
 @load_decel_mag:
 	lda temp3
 	bit btn_a
-	beq @a_held
-	ldy #$08 ; Stats offset for high deceleration
+	bne @a_held
+	ldy #$06 ; Stats offset for high deceleration
 	bne @load_decel_magnitude ; Cheap relative jump since Z = 0
 
 @a_held:
 	ldy #$08 ; Stats offset for low deceleration
 
 @load_decel_magnitude:
-	ldy #$06 ; Force high decel
 	lda (addr_ptr), y
 	sta temp
 	iny
