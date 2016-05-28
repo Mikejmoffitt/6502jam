@@ -84,70 +84,119 @@ player_check_disc:
 ;	Player's dx/dy have been attenuated
 ; ==============================================
 player_decel:
-	rts
 ; Set up addr_ptr with player stats struct
 	lda player_state + PLAYER_STATS_ADDROFF, x
 	sta addr_ptr
 	lda player_state + PLAYER_STATS_ADDROFF + 1, x
 	sta addr_ptr + 1
 
-; Load temp.w with deceleration amount
-	ldy #$06
+; Load correct player's gamepad into temp3
+	cpx #$00
+	beq @p1_pad
+	lda pad_2
+	sta temp3	
+	jmp @load_decel_mag
+@p1_pad:
+	lda pad_1
+	sta temp3
+
+; Choose which stat offset to use
+@load_decel_mag:
+	lda temp3
+	bit btn_a
+	beq @a_held
+	ldy #$08 ; Stats offset for high deceleration
+	bne @load_decel_magnitude ; Cheap relative jump since Z = 0
+
+@a_held:
+	ldy #$08 ; Stats offset for low deceleration
+
+@load_decel_magnitude:
+	ldy #$06 ; Force high decel
 	lda (addr_ptr), y
 	sta temp
 	iny
-	lda #$00
 	lda (addr_ptr), y
-	sta temp2
+	sta temp+1
 
-; Put abs(dx+1) in temp3 to compare magnitude with dash
+@deceleration_start:
+	lda player_state + PLAYER_DXOFF, x
+	sta temp3
 	lda player_state + PLAYER_DXOFF + 1, x
-	bpl @no_invert_dx
-	lda #$00
-	sec
-	sbc player_state + PLAYER_DXOFF + 1, x
-
-@no_invert_dx:
-; Compare magnitude of dx to dash
-	cmp temp2
-	bcs @no_clamp_dx
-	lda #$00
-	sta player_state + PLAYER_DXOFF, x
-	sta player_state + PLAYER_DXOFF + 1, x
-	jmp @dx_final
-
-; Magnitude is less; do the deceleration.
-@no_clamp_dx:
+	sta temp3+1
 
 ; Check sign of dx
-	lda player_state + PLAYER_DXOFF + 1, x
-	and #%10000000
-	beq @dx_pos
+	bpl @dx_positive
 
-@dx_neg:
+@dx_negative:
 ; Add temp.w to dx.w
 	clc
-	lda player_state + PLAYER_DXOFF, x
+	lda temp3
 	adc temp
 	sta player_state + PLAYER_DXOFF, x
-	lda player_state + PLAYER_DXOFF + 1, x
-	adc temp + 1
+	lda temp3+1
+	adc temp+1
+	sta player_state + PLAYER_DXOFF + 1, x
+	bmi @dx_final ; If dx is still negative, don't zero it out
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF + 1, x
 	jmp @dx_final
 
-@dx_pos:
+@dx_positive:
 ; Subtract temp.w from dx.w
 	sec
-	lda player_state + PLAYER_DXOFF, x
+	lda temp3
 	sbc temp
 	sta player_state + PLAYER_DXOFF, x
-	lda player_state + PLAYER_DXOFF + 1, x
-	sbc temp + 1
+	lda temp3+1
+	sbc temp+1
 	sta player_state + PLAYER_DXOFF + 1, x
-	jmp @dx_final
+	bpl @dx_final ; If dx is still positive, don't zero it out
+	lda #$00
+	sta player_state + PLAYER_DXOFF, x
+	sta player_state + PLAYER_DXOFF + 1, x
 
 @dx_final:
-; TODO: Above logic, with Dy
+
+	lda player_state + PLAYER_DYOFF, x
+	sta temp3
+	lda player_state + PLAYER_DYOFF + 1, x
+	sta temp3+1
+
+; Check sign of dy
+	bpl @dy_positive
+
+@dy_negative:
+; Add temp.w to dy.w
+	clc
+	lda temp3
+	adc temp
+	sta player_state + PLAYER_DYOFF, x
+	lda temp3+1
+	adc temp+1
+	sta player_state + PLAYER_DYOFF + 1, x
+	bmi @dy_final ; If dy has gone positive, zero it out
+	lda #$00
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF + 1, x
+	jmp @dy_final
+
+@dy_positive:
+; Subtract temp.w from dy.w
+	sec
+	lda temp3
+	sbc temp
+	sta player_state + PLAYER_DYOFF, x
+	lda temp3+1
+	sbc temp+1
+	sta player_state + PLAYER_DYOFF + 1, x
+	bpl @dy_final ; If dy has gone negative, zero it out
+	lda #$00
+	sta player_state + PLAYER_DYOFF, x
+	sta player_state + PLAYER_DYOFF + 1, x
+
+@dy_final:
 	rts
 
 ; ===============================================
@@ -203,19 +252,19 @@ player_check_bounds:
 	lda player_state + PLAYER_XOFF + 1, x
 	sec
 	sbc #PLAYER_W/2
-	cmp temp	 	; if (player.x < playfield_left)
+	cmp temp5	 	; if (player.x < playfield_left)
 	bcc @snap_left
 	; Add to get the right of the player
 	clc
 	adc #PLAYER_W
-	cmp temp2		; else if (player.x > playfield_right)
+	cmp temp6		; else if (player.x > playfield_right)
 	beq @snap_right
 	bcs @snap_right
 	bcc @postloop		; else { goto postloop }
 
 @snap_left:
 	; If so, snap to top of playfield
-	lda temp
+	lda temp5
 	clc
 	adc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
@@ -224,7 +273,7 @@ player_check_bounds:
 
 @snap_right:
 	; If so, snap to bottom of playfield
-	lda temp2
+	lda temp6
 	sec
 	sbc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
@@ -242,13 +291,12 @@ player_check_bounds:
 ;	Player counters modified, movement potentially halted.
 ; ========================================
 player_counters:
-
 ; Only decrement the slide counter if the player is not in motion.
 	lda player_state + PLAYER_DXOFF, x
 	ora player_state + PLAYER_DXOFF + 1, x
 	ora player_state + PLAYER_DYOFF, x
 	ora player_state + PLAYER_DYOFF + 1, x
-	beq @ignore_slide
+	bne @ignore_slide
 
 ; Decrement the slide counter
 	lda player_state + PLAYER_SLIDE_CNTOFF, x
@@ -275,9 +323,9 @@ player_counters:
 players_move:
 	ldx #$00
 	lda playfield_left
-	sta temp
+	sta temp5
 	lda playfield_center
-	sta temp2
+	sta temp6
 
 @toploop:
 
@@ -314,9 +362,9 @@ players_move:
 	bne @endloop
 	; Change X bounds for Player 2's loop
 	lda playfield_right 
-	sta temp2
+	sta temp6
 	lda playfield_center
-	sta temp
+	sta temp5
 	ldx #PLAYER_SIZE
 	jmp @toploop	
 
@@ -426,8 +474,8 @@ players_input_buttons:
 	rts
 
 @do_slide:
+	lda $5555
 ; Set the slide counter, and launch the player.
-; TODO: Actually launch the player.
 
 ; If the d-pad isn't being pressed, don't do anything.
 	lda temp
@@ -436,7 +484,6 @@ players_input_buttons:
 
 ; Set the counter.
 	lda #(PLAYER_SLIDE_DELAY)
-	lda #$20
 	sta player_state + PLAYER_SLIDE_CNTOFF, x
 
 ; Set up addr_ptr with player stats struct
@@ -446,7 +493,6 @@ players_input_buttons:
 	sta addr_ptr + 1
 
 ; Launch the player
-	sta $5555 ; debug poke
 @right_check:
 	; Check if right is hold
 	lda temp
@@ -472,8 +518,8 @@ players_input_buttons:
 
 	; Load velocity for dx
 	ldy #$04			; 3rd word, for dash strength (LSB)
-	sec
 	lda #$00
+	sec
 	sbc (addr_ptr), y		; Negate it
 	sta player_state + PLAYER_DXOFF, x
 	iny				; Now grab the MSB
@@ -502,8 +548,8 @@ players_input_buttons:
 
 	; Load velocity for dy
 	ldy #$04
-	sec
 	lda #$00
+	sec
 	sbc (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	iny

@@ -148,11 +148,11 @@ players_init:
 ; Load with stats
 	lda #<girl_stats
 	sta player_state + PLAYER_STATS_ADDROFF
-	lda #<girl_stats_alt
+	lda #<girl_stats
 	sta player_state + PLAYER_STATS_ADDROFF + PLAYER_SIZE
 	lda #>girl_stats
 	sta player_state + PLAYER_STATS_ADDROFF + 1
-	lda #>girl_stats_alt
+	lda #>girl_stats
 	sta player_state + PLAYER_STATS_ADDROFF + PLAYER_SIZE + 1
 
 ; P1 on the left side

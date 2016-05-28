@@ -218,17 +218,8 @@ girl_anim_num_map:
 girl_stats:
 	.word	300	; Straight walk speed
 	.word	212	; Diagonal walk speed
-	.word	512	; Dash strength
-	.word	16	; Dash decal magnitude due to friction
+	.word	1336	; Dash strength
+	.word	99	; Fast dash decel
+	.word	56	; Slow dash decel
 	.word	640	; Max throw strength
 	.word	40	; Throw time-stale factor
-
-
-girl_stats_alt:
-	.word	600	; Straight walk speed
-	.word	424	; Diagonal walk speed
-	.word	512	; Dash strength
-	.word	192	; Dash decal magnitude due to friction
-	.word	640	; Max throw strength
-	.word	40	; Throw time-stale factor
-
