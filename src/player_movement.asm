@@ -123,14 +123,15 @@ player_decel:
 	sta temp3
 	lda player_state + PLAYER_DXOFF + 1, x
 	sta temp3+1
+	sta $5555
 
 ; Check sign of dx
 	bpl @dx_positive
 
 @dx_negative:
 ; Add temp.w to dx.w
-	clc
 	lda temp3
+	clc
 	adc temp
 	sta player_state + PLAYER_DXOFF, x
 	lda temp3+1
@@ -144,8 +145,8 @@ player_decel:
 
 @dx_positive:
 ; Subtract temp.w from dx.w
-	sec
 	lda temp3
+	sec
 	sbc temp
 	sta player_state + PLAYER_DXOFF, x
 	lda temp3+1
@@ -168,8 +169,8 @@ player_decel:
 
 @dy_negative:
 ; Add temp.w to dy.w
-	clc
 	lda temp3
+	clc
 	adc temp
 	sta player_state + PLAYER_DYOFF, x
 	lda temp3+1
@@ -183,8 +184,8 @@ player_decel:
 
 @dy_positive:
 ; Subtract temp.w from dy.w
-	sec
 	lda temp3
+	sec
 	sbc temp
 	sta player_state + PLAYER_DYOFF, x
 	lda temp3+1
@@ -473,7 +474,6 @@ players_input_buttons:
 	rts
 
 @do_slide:
-	lda $5555
 ; Set the slide counter, and launch the player.
 
 ; If the d-pad isn't being pressed, don't do anything.
@@ -522,7 +522,6 @@ players_input_buttons:
 	sbc (addr_ptr), y		; Negate it
 	sta player_state + PLAYER_DXOFF, x
 	iny				; Now grab the MSB
-	sec
 	lda #$00
 	sbc (addr_ptr), y		; Once more negate dx
 	sta player_state + PLAYER_DXOFF + 1, x
@@ -552,7 +551,6 @@ players_input_buttons:
 	sbc (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	iny
-	sec
 	lda #$00
 	sbc (addr_ptr), y
 	sta player_state + PLAYER_DYOFF + 1, x
