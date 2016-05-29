@@ -135,8 +135,13 @@ players_init:
 	ldy #$09
 	jsr player_load_gfx
 
+; TODO: Choose palettes based on character selection
+	bank_load #02
+	
+
 ; TODO: Choose this based on character selection
 ; temporarily set up player to run the girl's animations
+	bank_load #02
 	lda #<girl_anim_num_map
 	sta player_state + PLAYER_ANIM_MAPOFF
 	sta player_state + PLAYER_ANIM_MAPOFF + PLAYER_SIZE

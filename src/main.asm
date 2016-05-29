@@ -155,11 +155,16 @@ playfield_init:
 	; Playfield #1's CHR data
 	ppu_write_32kbit gfx1 + $1000, #$10
 
+	; TODO: Remove
+	bank_load #$01
+	ppu_load_spr_palette player_palettes+8
+
 	bank_load #$01
 	; Playfield #1's mappings
 	ppu_write_8kbit field1_table, #$20
 	; Playfield #1's palettes
-	ppu_load_full_palette palettes+$00
+	ppu_load_bg_palette playfield_palettes
+
 
 ; Store playfield dimensions
 	lda #PLAYFIELD_X

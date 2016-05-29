@@ -297,16 +297,11 @@ player_draw:
 	sty temp2			; OAM index offset
 	sub16 addr_ptr, temp2		; Subtract to correct for Y off
 
-	lda #%00000010			; Store for
-	sta temp2			; Palette comparison
-
-
 ; Pre-loop entry conditions:
 	; Y contains the offset from OAM_BASE to begin writing to (Y pos of first sprite)
 	; addr_ptr is a ZP 16-bit pointer to the base of the animation data to copy from
 	; addr_ptr has initial Y subtracted from it to counter Y's offset
 	; X contains the player state offset (right now it is zero and unused anyway)
-	; temp2 contains #%00000010 for an attribute modification, presently unused
 	; temp contains Y + 48, which is the base case to end this loop
 @oam_copy_loop:
 					; Y = OAM Y position
@@ -327,11 +322,9 @@ player_draw:
 	iny				; Y = OAM attributes
 
 	lda (addr_ptr), y
-	cpx #$00
+	cpx #$00			; Are we drawing player 1?
 	beq @nomod_pal			; Don't modify palette for P1
-	bit temp2			; Only modify the palette to #3
-	beq @nomod_pal			; if palette #2 is being used
-	ora #%00000001
+	ora #%00000010
 
 @nomod_pal:
 	rol a
@@ -395,7 +388,7 @@ player_draw:
 	iny
 	iny
 	iny
-	cpy temp				; Hide all remaining sprites
+	cpy temp			; Hide all remaining sprites
 	bne @end_frame			; for this player.
 	rts
 
