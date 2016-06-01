@@ -157,7 +157,7 @@ playfield_init:
 
 	; TODO: Remove
 	bank_load #$01
-	ppu_load_spr_palette player_palettes+8
+	ppu_load_spr_palette player_palettes
 
 	bank_load #$01
 	; Playfield #1's mappings
