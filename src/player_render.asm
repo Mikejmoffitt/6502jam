@@ -317,7 +317,18 @@ player_draw:
 	sta temp4
 	iny				; Y = OAM tile select
 
+	lda $5555
 	lda (addr_ptr), y
+	cpx #$00			; Are we drawing player 1?
+	beq @p1_tile			; Branch for P2's tile offset
+@p2_tile:
+	clc
+	adc #$90			; Offset for P1 VRAM Slot
+	jmp @tile_store
+@p1_tile:
+	clc
+	adc #$20			; Offset for P2 VRAM slot
+@tile_store:
 	sta OAM_BASE, y
 	iny				; Y = OAM attributes
 
@@ -327,6 +338,7 @@ player_draw:
 	ora #%00000010
 
 @nomod_pal:
+	; Process X flip for attributes
 	rol a
 	rol a
 	rol a
