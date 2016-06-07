@@ -12,7 +12,7 @@ girl_mapping_fwd0:
         .byte   <-24, $12, %00000001, <-8
         .byte   <-24, $13, %00000001, 0
         .byte   <-16, $23, %00000001, <-5
-        .byte   <-8, $33, %00000000, <-5
+        .byte   <-8,  $33, %00000000, <-5
         .byte   $FF
 
 girl_mapping_fwd1:
@@ -20,10 +20,10 @@ girl_mapping_fwd1:
         .byte   <-33, $01, %00000001, 0
         .byte   <-25, $10, %00000001, <-8
         .byte   <-25, $11, %00000001, 0
-        .byte   <-17, $20, %00000001, <-10
-        .byte   <-17, $21, %00000001, <-2
-        .byte   <-9, $30, %00000000, <-11
-        .byte   <-9, $31, %00000000, 0
+        .byte   <-17, $20, %00000001, <-9
+        .byte   <-17, $21, %00000001, <-1
+        .byte   <-9,  $30, %00000000, <-11
+        .byte   <-9,  $31, %00000000, 0
         .byte   $FF
 
 girl_mapping_fwd2:
@@ -33,8 +33,8 @@ girl_mapping_fwd2:
         .byte   <-25, $15, %00000001, 0
         .byte   <-17, $22, %00000001, <-10
         .byte   <-17, $03, %00000001, <-2
-        .byte   <-9, $30, %00000000, <-11
-        .byte   <-9, $31, %00000000, 0
+        .byte   <-9,  $30, %00000000, <-11
+        .byte   <-9,  $31, %00000000, 0
         .byte   $FF
 
 girl_mapping_down0:
@@ -43,8 +43,8 @@ girl_mapping_down0:
         .byte   <-24, $25, %01000001, 0
         .byte   <-16, $34, %00000001, <-8
         .byte   <-16, $34, %01000001, 0
-        .byte   <-8, $35, %00000000, <-8
-        .byte   <-8, $35, %01000000, 0
+        .byte   <-8,  $35, %00000000, <-8
+        .byte   <-8,  $35, %01000000, 0
         .byte   $ff
 
 girl_mapping_down1:
@@ -53,8 +53,8 @@ girl_mapping_down1:
         .byte   <-25, $07, %00000001, 0
         .byte   <-17, $16, %00000001, <-8
         .byte   <-17, $17, %00000001, 0
-        .byte   <-9, $26, %00000000, <-8
-        .byte   <-9, $27, %00000000, 0
+        .byte   <-9,  $26, %00000000, <-8
+        .byte   <-9,  $27, %00000000, 0
         .byte   $FF
 
 girl_mapping_down2:
@@ -63,8 +63,8 @@ girl_mapping_down2:
         .byte   <-25, $06, %01000001, 0
         .byte   <-17, $17, %01000001, <-8
         .byte   <-17, $16, %01000001, 0
-        .byte   <-9, $27, %01000000, <-8
-        .byte   <-9, $26, %01000000, 0
+        .byte   <-9,  $27, %01000000, <-8
+        .byte   <-9,  $26, %01000000, 0
         .byte   $FF
 
 girl_mapping_up0:
@@ -73,8 +73,8 @@ girl_mapping_up0:
         .byte   <-24, $37, %01000001, 0
         .byte   <-16, $24, %00000001, <-8
         .byte   <-16, $24, %01000001, 0
-        .byte   <-8, $35, %00000000, <-8
-        .byte   <-8, $35, %01000000, 0
+        .byte   <-8,  $35, %00000000, <-8
+        .byte   <-8,  $35, %01000000, 0
         .byte   $FF
 
 girl_mapping_up1:
@@ -83,8 +83,8 @@ girl_mapping_up1:
         .byte   <-25, $19, %00000001, 0
         .byte   <-17, $28, %00000001, <-8
         .byte   <-17, $29, %00000001, 0
-        .byte   <-9, $36, %00000000, <-8
-        .byte   <-9, $27, %00000000, 0
+        .byte   <-9,  $36, %00000000, <-8
+        .byte   <-9,  $27, %00000000, 0
         .byte   $FF
 
 girl_mapping_up2:
@@ -93,9 +93,32 @@ girl_mapping_up2:
         .byte   <-25, $18, %01000001, 0
         .byte   <-17, $29, %01000001, <-8
         .byte   <-17, $28, %01000001, 0
-        .byte   <-9, $27, %01000000, <-8
-        .byte   <-9, $36, %01000000, 0
+        .byte   <-9,  $27, %01000000, <-8
+        .byte   <-9,  $36, %01000000, 0
         .byte   $FF
+
+girl_mapping_block0:
+	.byte	<-32, $0A, %00000001, <-9
+	.byte	<-32, $0B, %00000001, <-1
+	.byte	<-24, $1A, %00000001, <-9
+	.byte	<-24, $1B, %00000001, <-1
+	.byte	<-16, $2A, %00000001, <-9
+	.byte	<-16, $2B, %00000001, <-1
+	.byte	<-8,  $3A, %00000000, <-9
+	.byte	<-8,  $3B, %00000000, <-1
+	.byte	$FF
+
+girl_mapping_block1:
+	.byte	<-32, $0A, %00000001, <-11
+	.byte	<-32, $0B, %00000001, <-3
+	.byte	<-24, $1A, %00000001, <-11
+	.byte	<-24, $1B, %00000001, <-3
+	.byte	<-16, $2A, %00000001, <-10
+	.byte	<-16, $2B, %00000001, <-2
+	.byte	<-8,  $3A, %00000000, <-9
+	.byte	<-8,  $3B, %00000000, <-1
+	.byte	$FF
+	
 
 ; =============== Animation Scripts ===============
 ; Sequences of mappings to form animation sequences
@@ -179,6 +202,19 @@ girl_anim_run_down:
 	.addr	girl_mapping_down0 ; ------------
 	.byte	5, 0
 
+girl_anim_block:
+	.byte 3
+	.byte 2
+
+	.addr girl_mapping_block0 ; -----------
+	.byte 3, 0
+
+	.addr girl_mapping_block1 ; -----------
+	.byte 7, 0
+
+	.addr girl_mapping_block0 ; -----------
+	.byte 3, 0
+
 
 ; ============ Animation Number Map ====================
 ; An array containing the addresses of animation numbers. Used to
@@ -191,6 +227,7 @@ girl_anim_num_map:
 	.addr	girl_anim_run_fwd
 	.addr	girl_anim_run_up
 	.addr	girl_anim_run_down
+	.addr	girl_anim_block
 
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.

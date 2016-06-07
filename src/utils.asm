@@ -105,6 +105,16 @@ players_init:
 	inx ; X gets PLAYER_DIR_LEFT
 ; P2 faces left
 	stx player_state + PLAYER_DIRXOFF + PLAYER_SIZE
+	lda #PLAYER_FACING_RIGHT
+	sta player_state + PLAYER_FACINGOFF
+	lda #PLAYER_FACING_LEFT
+	sta player_state + PLAYER_FACINGOFF + PLAYER_SIZE
+	
+; Load both players with an invalid anim number so they will have to re-load
+; correctly once they get in-game.
+	lda #$FF
+	sta player_state + PLAYER_ANIM_NUMOFF
+	sta player_state + PLAYER_ANIM_NUMOFF + PLAYER_SIZE
 
 ; both players start at half-height on the field
 	lda playfield_top		; A = Playfield top

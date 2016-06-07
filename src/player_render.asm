@@ -40,6 +40,18 @@ players_draw:
 ;	If appropriate, the player's animation number will have changed, and
 ;	the animation address will update as well.
 player_choose_animation:
+
+	lda $5555
+	; Check for the block counter
+	lda player_state + PLAYER_BLOCK_CNTOFF, x
+	beq :+
+	lda #ANIM_BLOCK
+	jsr player_set_anim_num
+	rts
+:
+
+
+@standard_anim: ; For normal states (no counters, etc)
 	lda player_state + PLAYER_DXOFF, x
 	bne @moving
 	lda player_state + PLAYER_DXOFF + 1, x
@@ -62,12 +74,12 @@ player_choose_animation:
 	rts
 
 @facing_up_s:
-	lda #ANIM_STAND_UP
+	lda #ANIM_STAND_FWD
 	jsr player_set_anim_num
 	rts
 
 @facing_down_s:
-	lda #ANIM_STAND_DOWN
+	lda #ANIM_STAND_FWD
 	jsr player_set_anim_num
 	rts
 

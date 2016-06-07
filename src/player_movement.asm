@@ -252,19 +252,19 @@ player_check_bounds:
 	lda player_state + PLAYER_XOFF + 1, x
 	sec
 	sbc #PLAYER_W/2
-	cmp temp5	 	; if (player.x < playfield_left)
+	cmp temp7	 	; if (player.x < playfield_left)
 	bcc @snap_left
 	; Add to get the right of the player
 	clc
 	adc #PLAYER_W
-	cmp temp6		; else if (player.x > playfield_right)
+	cmp temp8		; else if (player.x > playfield_right)
 	beq @snap_right
 	bcs @snap_right
 	bcc @postloop		; else { goto postloop }
 
 @snap_left:
 	; If so, snap to top of playfield
-	lda temp5
+	lda temp7
 	clc
 	adc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
@@ -273,7 +273,7 @@ player_check_bounds:
 
 @snap_right:
 	; If so, snap to bottom of playfield
-	lda temp6
+	lda temp8
 	sec
 	sbc #PLAYER_W/2
 	sta player_state + PLAYER_XOFF + 1, x
@@ -323,9 +323,9 @@ player_counters:
 players_move:
 	ldx #$00
 	lda playfield_left
-	sta temp5
+	sta temp7
 	lda playfield_center
-	sta temp6
+	sta temp8
 
 @toploop:
 
@@ -362,9 +362,9 @@ players_move:
 	bne @endloop
 	; Change X bounds for Player 2's loop
 	lda playfield_right 
-	sta temp6
+	sta temp8
 	lda playfield_center
-	sta temp5
+	sta temp7
 	ldx #PLAYER_SIZE
 	jmp @toploop	
 
@@ -437,6 +437,7 @@ players_input_buttons:
 	sta temp
 	lda pad_2_prev
 	sta temp2
+
 
 @check_a_button:
 	; Has A just been pressed?
@@ -605,6 +606,8 @@ players_input_dpad:
 @handle_accel_top:			; Top of this loop, run twice
 	cpx #$00			; Which player?
 	bne @p2_check			; Branch for player 2
+	lda #PLAYER_DIR_RIGHT
+	sta temp5
 	lda pad_1
 	sta temp3
 	lda pad_1_prev
@@ -612,13 +615,17 @@ players_input_dpad:
 	jmp @handle_directions		; Now to check buttons
 
 @p2_check:
+	lda #PLAYER_DIR_LEFT
+	sta temp5
 	lda pad_2
 	sta temp3
 	lda pad_2_prev
 	sta temp4
+
 ; Pre-entry conditions:
 ;	temp3 is loaded with pad state capture
 ;	temp4 is loaded with previous frame's pad state capture
+; 	temp5 is loaded with  the direction the player should neutrally face
 @handle_directions:
 
 	lda temp3			; Y = pad to check
@@ -656,6 +663,8 @@ players_input_dpad:
 	iny
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF+1, x
+	lda temp5
+	sta player_state + PLAYER_DIRXOFF, x
 	lda #$00
 	sta player_state + PLAYER_DXOFF, x
 	sta player_state + PLAYER_DXOFF+1, x
@@ -682,6 +691,8 @@ players_input_dpad:
 	sta player_state + PLAYER_DXOFF+1, x
 	lda #$01
 	sta player_state + PLAYER_DIRYOFF, x
+	lda temp5
+	sta player_state + PLAYER_DIRXOFF, x
 	lda #PLAYER_FACING_UP
 	sta player_state + PLAYER_FACINGOFF, x
 	jmp @post_dpad
