@@ -41,7 +41,6 @@ players_draw:
 ;	the animation address will update as well.
 player_choose_animation:
 
-	lda $5555
 	; Check for the block counter
 	lda player_state + PLAYER_BLOCK_CNTOFF, x
 	beq :+
@@ -50,6 +49,74 @@ player_choose_animation:
 	rts
 :
 
+	; Check for slide counter
+	lda player_state + PLAYER_SLIDE_CNTOFF, x
+	beq @standard_anim
+
+	; dy != 0?
+	lda player_state + PLAYER_DYOFF, x
+	bne @dy_nonzero
+	lda player_state + PLAYER_DYOFF + 1, x
+	bne @dy_nonzero
+	; dx != 0?
+	lda player_state + PLAYER_DXOFF, x
+	bne @not_halted
+	lda player_state + PLAYER_DXOFF + 1, x
+	bne @not_halted
+	; player is immobile; show standing anim
+	lda #ANIM_STAND_FWD
+	jsr player_set_anim_num
+	rts
+
+@not_halted:
+	; dy == 0; we are sliding forwards.
+	lda #ANIM_SLIDE_FWD
+	jsr player_set_anim_num
+	rts
+
+@dy_nonzero:
+	; Determine if dx is nonzero.
+	lda #$01
+	sta temp
+	; dx != 0?
+	lda player_state + PLAYER_DXOFF, x
+	bne @dx_nonzero
+	lda player_state + PLAYER_DXOFF + 1, x
+	bne @dx_nonzero
+	; mark dx as being zero for later
+	lda #$00
+	sta temp
+
+@dx_nonzero:
+
+	; Going up or down?
+	lda player_state + PLAYER_DIRYOFF, x
+	bne @going_up
+	; Going down.
+	; Check for dx nonzero
+	lda temp
+	beq @down_nodx
+	lda #ANIM_SLIDE_FWDDOWN
+	jsr player_set_anim_num
+	rts
+
+@down_nodx:
+	lda #ANIM_SLIDE_DOWN
+	jsr player_set_anim_num
+	rts
+
+@going_up:
+	; Check for dx nonzero
+	lda temp
+	beq @up_nodx
+	lda #ANIM_SLIDE_FWDUP
+	jsr player_set_anim_num
+	rts
+
+@up_nodx:
+	lda #ANIM_SLIDE_UP
+	jsr player_set_anim_num
+	rts
 
 @standard_anim: ; For normal states (no counters, etc)
 	lda player_state + PLAYER_DXOFF, x
@@ -329,7 +396,6 @@ player_draw:
 	sta temp4
 	iny				; Y = OAM tile select
 
-	lda $5555
 	lda (addr_ptr), y
 	cpx #$00			; Are we drawing player 1?
 	beq @p1_tile			; Branch for P2's tile offset

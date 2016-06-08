@@ -118,6 +118,22 @@ girl_mapping_block1:
 	.byte	<-8,  $60, %00000000, <-9
 	.byte	<-8,  $61, %00000000, <-1
 	.byte	$FF
+
+girl_mapping_slide_fwd0:
+	.byte	<-25, $42, %00000001, <-16
+	.byte	<-25, $43, %00000001, <-8
+	.byte	<-17, $52, %00000001, <-16
+	.byte	<-17, $53, %00000001, <-8
+	.byte	<-17, $54, %00000001, 0
+	.byte	<-9,  $62, %00000001, <-11
+	.byte	<-9,  $63, %00000001, <-3
+	.byte	<-9,  $64, %00000000, 4
+	.byte	<-9,  $65, %00000000, 12
+	.byte	$FF
+
+girl_mapping_dummy:
+	.byte	<-$20, <-$20, 0, 0
+	.byte	$FF
 	
 
 ; =============== Animation Scripts ===============
@@ -203,17 +219,33 @@ girl_anim_run_down:
 	.byte	5, 0
 
 girl_anim_block:
-	.byte 3
-	.byte 2
+	.byte	3
+	.byte	2
 
-	.addr girl_mapping_block0 ; -----------
-	.byte 3, 0
+	.addr	girl_mapping_block0 ; -----------
+	.byte	3, 0
 
-	.addr girl_mapping_block1 ; -----------
-	.byte 7, 0
+	.addr	girl_mapping_block1 ; -----------
+	.byte	7, 0
 
-	.addr girl_mapping_block0 ; -----------
-	.byte 3, 0
+	.addr	girl_mapping_block0 ; -----------
+	.byte	3, 0
+
+girl_anim_slide_down:		; TODO: Individual slide mapping
+girl_anim_slide_fwdup:		; TODO: Individual slide mapping
+girl_anim_slide_up:		; TODO: Individual slide mapping
+girl_anim_slide_fwddown:	; TODO: Individual slide mapping
+	.byte 	1
+	.byte	0
+	.addr	girl_mapping_dummy
+	.byte	2, 0
+
+girl_anim_slide_fwd:
+	.byte	1
+	.byte	0
+
+	.addr	girl_mapping_slide_fwd0 ; ------
+	.byte	2, 0
 
 
 ; ============ Animation Number Map ====================
@@ -228,6 +260,11 @@ girl_anim_num_map:
 	.addr	girl_anim_run_up
 	.addr	girl_anim_run_down
 	.addr	girl_anim_block
+	.addr	girl_anim_slide_fwd
+	.addr	girl_anim_slide_fwdup
+	.addr	girl_anim_slide_fwddown
+	.addr	girl_anim_slide_up
+	.addr	girl_anim_slide_down
 
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
