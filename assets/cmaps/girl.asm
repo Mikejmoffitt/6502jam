@@ -22,7 +22,7 @@ girl_mapping_fwd1:
         .byte   <-25, $11, %00000001, 0
         .byte   <-17, $20, %00000001, <-9
         .byte   <-17, $21, %00000001, <-1
-        .byte   <-9,  $30, %00000000, <-11
+        .byte   <-9,  $30, %00000000, <-10
         .byte   <-9,  $31, %00000000, 0
         .byte   $FF
 
@@ -34,7 +34,7 @@ girl_mapping_fwd2:
         .byte   <-17, $22, %00000001, <-10
         .byte   <-17, $03, %00000001, <-2
         .byte   <-9,  $30, %00000000, <-11
-        .byte   <-9,  $31, %00000000, 0
+        .byte   <-9,  $31, %00000000, <-1
         .byte   $FF
 
 girl_mapping_down0:
@@ -123,6 +123,18 @@ girl_mapping_slide_fwd0:
 	.byte	<-25, $42, %00000001, <-16
 	.byte	<-25, $43, %00000001, <-8
 	.byte	<-17, $52, %00000001, <-16
+	.byte	<-17, $53, %00000001, <-8
+	.byte	<-17, $54, %00000001, 0
+	.byte	<-9,  $62, %00000001, <-11
+	.byte	<-9,  $63, %00000001, <-3
+	.byte	<-9,  $64, %00000000, 4
+	.byte	<-9,  $65, %00000000, 12
+	.byte	$FF
+
+girl_mapping_slide_fwd1:
+	.byte	<-25, $32, %00000001, <-16
+	.byte	<-25, $43, %00000001, <-8
+	.byte	<-17, $44, %00000001, <-16
 	.byte	<-17, $53, %00000001, <-8
 	.byte	<-17, $54, %00000001, 0
 	.byte	<-9,  $62, %00000001, <-11
@@ -241,11 +253,13 @@ girl_anim_slide_fwddown:	; TODO: Individual slide mapping
 	.byte	2, 0
 
 girl_anim_slide_fwd:
-	.byte	1
+	.byte	2
 	.byte	0
 
 	.addr	girl_mapping_slide_fwd0 ; ------
-	.byte	2, 0
+	.byte	3, 0
+	.addr	girl_mapping_slide_fwd1 ; ------
+	.byte	3, 0
 
 
 ; ============ Animation Number Map ====================
@@ -280,10 +294,10 @@ girl_anim_num_map:
 ;	fix16: Throw time-stale factor
 
 girl_stats:
-	.word	300	; Straight walk speed
-	.word	212	; Diagonal walk speed
-	.word	1336	; Dash strength
-	.word	99	; Fast dash decel
-	.word	56	; Slow dash decel
+	.word	400	; Straight walk speed
+	.word	282	; Diagonal walk speed
+	.word	1136	; Dash strength
+	.word	88	; Fast dash decel
+	.word	34	; Slow dash decel
 	.word	640	; Max throw strength
 	.word	40	; Throw time-stale factor
