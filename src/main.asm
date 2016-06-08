@@ -8,7 +8,7 @@ PLAYFIELD_Y      = $40
 PLAYFIELD_WIDTH  = $e8
 PLAYFIELD_X      = $0c
 
-FENCE_SPR_Y = $cf
+FENCE_SPR_Y = $CF
 
 
 .segment "BANKF"
@@ -207,9 +207,9 @@ main_entry:
 	jsr players_init
 
 	lda #$00
-	sta yscroll+1
 	sta xscroll
 	sta xscroll+1
+	sta yscroll+1
 	sta yscroll
 
 	spr_dma
