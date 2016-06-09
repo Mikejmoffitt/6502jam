@@ -176,6 +176,16 @@ girl_mapping_slide_fwdup0:
 	.byte	<-1, $69, %00000001, <-4
 	.byte	MAP_END
 
+girl_mapping_slide_fwdup1:
+	.byte	<-24, $55, %10000000, 2
+	.byte	<-17, $48, %00000001, <-10
+	.byte	<-17, $49, %00000001, <-2
+	.byte	<-9, $58, %00000001, <-10
+	.byte	<-9, $59, %00000001, <-2
+	.byte	<-1, $38, %00000001, <-12
+	.byte	<-1, $39, %00000001, <-4
+	.byte	MAP_END
+
 girl_mapping_dummy:
 	.byte	<-$20, <-$20, 0, 0
 	.byte	MAP_END
@@ -304,11 +314,15 @@ girl_anim_slide_fwddown:
 	.byte	3, 0
 
 girl_anim_slide_fwdup:
-	.byte	1
+	.byte	2
 	.byte	0
 	
 	.addr	girl_mapping_slide_fwdup0
 	.byte	3, 0
+
+	.addr	girl_mapping_slide_fwdup1
+	.byte	3, 0
+
 
 
 
