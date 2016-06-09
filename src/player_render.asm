@@ -386,8 +386,8 @@ player_draw:
 					; Y = OAM Y position
 	; Y position
 	lda (addr_ptr), y		; Y pos relative to player
-	cmp #$FF			; Check unused flag
-	beq @end_frame			; Y-Pos was $FF; terminate loop
+	cmp #ANIM_END			; Check unused flag
+	beq @end_frame			; Y-Pos was ANIM_END; terminate loop
 	clc
 	adc player_state + PLAYER_YOFF + 1, x; Offset from player's Y center
 	sec
@@ -473,6 +473,7 @@ player_draw:
 ; This branch is for when a sprite is to be hidden so we can ignore everything
 ; other than the Y position
 @end_frame:
+	lda #$FF
 	sta OAM_BASE, y			; Hide this sprite
 	iny
 	iny
