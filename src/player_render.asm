@@ -386,8 +386,8 @@ player_draw:
 					; Y = OAM Y position
 	; Y position
 	lda (addr_ptr), y		; Y pos relative to player
-	cmp #ANIM_END			; Check unused flag
-	beq @end_frame			; Y-Pos was ANIM_END; terminate loop
+	cmp #MAP_END			; Check unused flag
+	beq @end_frame			; Y-Pos was MAP_END; terminate loop
 	clc
 	adc player_state + PLAYER_YOFF + 1, x; Offset from player's Y center
 	sec

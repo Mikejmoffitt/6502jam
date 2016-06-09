@@ -1,7 +1,7 @@
 ; =============== Animation Mappings ====================
 ; Arrangements of sprites to form single animation frames, or "metasprites"
 ; Four bytes follow the mapping of what goes into OAM, mostly
-;       Sprite Y (relative to player's Y), signed; set to ANIM_END to end list
+;       Sprite Y (relative to player's Y), signed; set to MAP_END to end list
 ;       Tile selection
 ;       Attributes; player 2 is ORed with %00000010
 ;       Sprite X (relative to player's X), signed; flipped to face left
@@ -14,7 +14,7 @@ girl_mapping_fwd0:
         .byte   <-24, $13, %00000001, 0
         .byte   <-16, $23, %00000001, <-5
         .byte   <-8,  $33, %00000000, <-5
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_fwd1:
         .byte   <-33, $00, %00000001, <-8
@@ -25,7 +25,7 @@ girl_mapping_fwd1:
         .byte   <-17, $21, %00000001, <-1
         .byte   <-9,  $30, %00000000, <-10
         .byte   <-9,  $31, %00000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_fwd2:
         .byte   <-33, $04, %00000001, <-8
@@ -36,7 +36,7 @@ girl_mapping_fwd2:
         .byte   <-17, $03, %00000001, <-2
         .byte   <-9,  $30, %00000000, <-11
         .byte   <-9,  $31, %00000000, <-1
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_down0:
         .byte   <-32, $05, %00000001, <-4
@@ -46,7 +46,7 @@ girl_mapping_down0:
         .byte   <-16, $34, %01000001, 0
         .byte   <-8,  $35, %00000000, <-8
         .byte   <-8,  $35, %01000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_down1:
         .byte   <-33, $05, %00000001, <-4
@@ -56,7 +56,7 @@ girl_mapping_down1:
         .byte   <-17, $17, %00000001, 0
         .byte   <-9,  $26, %00000000, <-8
         .byte   <-9,  $27, %00000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_down2:
         .byte   <-33, $05, %00000001, <-4
@@ -66,7 +66,7 @@ girl_mapping_down2:
         .byte   <-17, $16, %01000001, 0
         .byte   <-9,  $27, %01000000, <-8
         .byte   <-9,  $26, %01000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_up0:
         .byte   <-32, $08, %00000001, <-4
@@ -76,7 +76,7 @@ girl_mapping_up0:
         .byte   <-16, $24, %01000001, 0
         .byte   <-8,  $35, %00000000, <-8
         .byte   <-8,  $35, %01000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_up1:
         .byte   <-33, $08, %00000001, <-4
@@ -86,7 +86,7 @@ girl_mapping_up1:
         .byte   <-17, $29, %00000001, 0
         .byte   <-9,  $36, %00000000, <-8
         .byte   <-9,  $27, %00000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_up2:
         .byte   <-33, $08, %00000001, <-4
@@ -96,7 +96,7 @@ girl_mapping_up2:
         .byte   <-17, $28, %01000001, 0
         .byte   <-9,  $27, %01000000, <-8
         .byte   <-9,  $36, %01000000, 0
-        .byte   ANIM_END
+        .byte   MAP_END
 
 girl_mapping_block0:
 	.byte	<-32, $02, %00000001, <-9
@@ -107,7 +107,7 @@ girl_mapping_block0:
 	.byte	<-16, $51, %00000001, <-1
 	.byte	<-8,  $60, %00000000, <-8
 	.byte	<-8,  $61, %00000000, <-2
-	.byte	ANIM_END
+	.byte	MAP_END
 
 girl_mapping_block1:
 	.byte	<-31, $02, %00000001, <-11
@@ -118,7 +118,7 @@ girl_mapping_block1:
 	.byte	<-16, $51, %00000001, <-2
 	.byte	<-8,  $60, %00000000, <-9
 	.byte	<-8,  $61, %00000000, <-1
-	.byte	ANIM_END
+	.byte	MAP_END
 
 girl_mapping_slide_fwd0:
 	.byte	<-25, $42, %00000001, <-16
@@ -130,7 +130,7 @@ girl_mapping_slide_fwd0:
 	.byte	<-9,  $63, %00000001, <-3
 	.byte	<-9,  $64, %00000000, 4
 	.byte	<-9,  $65, %00000000, 12
-	.byte	ANIM_END
+	.byte	MAP_END
 
 girl_mapping_slide_fwd1:
 	.byte	<-25, $32, %00000001, <-16
@@ -142,7 +142,7 @@ girl_mapping_slide_fwd1:
 	.byte	<-9,  $63, %00000001, <-3
 	.byte	<-9,  $64, %00000000, 4
 	.byte	<-9,  $65, %00000000, 12
-	.byte	ANIM_END
+	.byte	MAP_END
 
 girl_mapping_slide_fwddown0:
 	.byte	<-25, $46, %00000001, <-10
@@ -153,7 +153,7 @@ girl_mapping_slide_fwddown0:
 	.byte	<-9, $66, %00000001, <-8
 	.byte	<-9, $67, %00000001, 0
 	.byte	<-1, $55, %00000000, 3 ; bottom foot
-	.byte	ANIM_END
+	.byte	MAP_END
 
 girl_mapping_slide_fwddown1:
 	.byte	<-25, $09, %00000001, <-10 ; alt hair
@@ -164,11 +164,21 @@ girl_mapping_slide_fwddown1:
 	.byte	<-9, $66, %00000001, <-8
 	.byte	<-9, $67, %00000001, 0
 	.byte	<-1, $55, %00000000, 3 ; bottom foot
-	.byte	ANIM_END
+	.byte	MAP_END
+
+girl_mapping_slide_fwdup0:
+	.byte	<-24, $55, %10000000, 2
+	.byte	<-17, $48, %00000001, <-10
+	.byte	<-17, $49, %00000001, <-2
+	.byte	<-9, $58, %00000001, <-10
+	.byte	<-9, $59, %00000001, <-2
+	.byte	<-1, $68, %00000001, <-12
+	.byte	<-1, $69, %00000001, <-4
+	.byte	MAP_END
 
 girl_mapping_dummy:
 	.byte	<-$20, <-$20, 0, 0
-	.byte	ANIM_END
+	.byte	MAP_END
 	
 
 ; =============== Animation Scripts ===============
@@ -267,7 +277,6 @@ girl_anim_block:
 	.byte	3, 0
 
 girl_anim_slide_down:		; TODO: Individual slide mapping
-girl_anim_slide_fwdup:		; TODO: Individual slide mapping
 girl_anim_slide_up:		; TODO: Individual slide mapping
 	.byte 	1
 	.byte	0
@@ -284,7 +293,7 @@ girl_anim_slide_fwd:
 	.addr	girl_mapping_slide_fwd1 ; ------
 	.byte	3, 0
 
-girl_anim_slide_fwddown:	; TODO: Individual slide mapping
+girl_anim_slide_fwddown:
 	.byte	2
 	.byte	0
 
@@ -292,6 +301,13 @@ girl_anim_slide_fwddown:	; TODO: Individual slide mapping
 	.byte	3, 0
 
 	.addr	girl_mapping_slide_fwddown1
+	.byte	3, 0
+
+girl_anim_slide_fwdup:
+	.byte	1
+	.byte	0
+	
+	.addr	girl_mapping_slide_fwdup0
 	.byte	3, 0
 
 
