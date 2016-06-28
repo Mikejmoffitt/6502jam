@@ -390,4 +390,4 @@ character_girl:
 ; Character graphics
 .segment "BANK2"
 	girl_chr:
-	.incbin "assets/cmaps/girl.chr"
+	.incbin "../assets/cmaps/girl.chr"

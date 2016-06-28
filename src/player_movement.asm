@@ -105,11 +105,11 @@ player_decel:
 	lda temp3
 	bit btn_a
 	bne @a_held
-	ldy #$06 ; Stats offset for high deceleration
+	ldy #STATS_DECEL_F; Stats offset for high deceleration
 	bne @load_decel_magnitude ; Cheap relative jump since Z = 0
 
 @a_held:
-	ldy #$08 ; Stats offset for low deceleration
+	ldy #STATS_DECEL_S ; Stats offset for low deceleration
 
 @load_decel_magnitude:
 	lda (addr_ptr), y
@@ -500,7 +500,7 @@ players_input_buttons:
 	beq @left_check ; if we're not holding right, check for left
 
 	; Load velocity for dx
-	ldy #$04			; 3rd word, for dash strength (LSB)
+	ldy #STATS_DASH_STR			; 3rd word, for dash strength (LSB)
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
 	iny				; Now grab the MSB
@@ -517,7 +517,7 @@ players_input_buttons:
 	beq @no_dx ; if we're not holding left at this point, skip to up/down
 
 	; Load velocity for dx
-	ldy #$04			; 3rd word, for dash strength (LSB)
+	ldy #STATS_DASH_STR			; 3rd word, for dash strength (LSB)
 	lda #$00
 	sec
 	sbc (addr_ptr), y		; Negate it
@@ -546,7 +546,7 @@ players_input_buttons:
 	beq @down_check
 
 	; Load velocity for dy
-	ldy #$04
+	ldy #STATS_DASH_STR
 	lda #$00
 	sec
 	sbc (addr_ptr), y
@@ -564,7 +564,7 @@ players_input_buttons:
 	bit btn_down
 	beq @end_dir_check
 
-	ldy #$04			; 3rd word, for dash strength (LSB)
+	ldy #STATS_DASH_STR			; 3rd word, for dash strength (LSB)
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	iny				; Now grab the MSB
@@ -641,7 +641,7 @@ players_input_dpad:
 ; Orthagonals are checked first.
 	cpy #(BUTTON_RIGHT)
 	bne :+
-	ldy #$00
+	ldy #STATS_WALK_S
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
 	iny
@@ -657,7 +657,7 @@ players_input_dpad:
 :
 	cpy #(BUTTON_DOWN)
 	bne :+
-	ldy #$00
+	ldy #STATS_WALK_S
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	iny
@@ -675,7 +675,7 @@ players_input_dpad:
 :
 	cpy #(BUTTON_UP)
 	bne :+
-	ldy #$00
+	ldy #STATS_WALK_S
 	lda (addr_ptr), y
 	sta temp
 	iny
@@ -702,7 +702,7 @@ players_input_dpad:
 @ldpad:
 	cpy #(BUTTON_LEFT)
 	bne :+
-	ldy #$00
+	ldy #STATS_WALK_S
 	lda (addr_ptr), y
 	sta temp
 	iny
@@ -726,7 +726,7 @@ players_input_dpad:
 ; Diagonals are checked second
 	cpy #(BUTTON_RIGHT | BUTTON_DOWN)
 	bne :+
-	ldy #$02
+	ldy #STATS_WALK_D
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x
 	iny
@@ -747,7 +747,7 @@ players_input_dpad:
 :
 	cpy #(BUTTON_RIGHT | BUTTON_UP)
 	bne :+
-	ldy #$02
+	ldy #STATS_WALK_D
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DXOFF, x 
 	sta temp
@@ -770,7 +770,7 @@ players_input_dpad:
 :
 	cpy #(BUTTON_LEFT | BUTTON_UP)
 	bne :+
-	ldy #$02
+	ldy #STATS_WALK_D
 	lda (addr_ptr), y
 	sta temp
 	iny
@@ -792,7 +792,7 @@ players_input_dpad:
 :
 	cpy #(BUTTON_LEFT | BUTTON_DOWN)
 	bne :+
-	ldy #$02
+	ldy #STATS_WALK_D
 	lda (addr_ptr), y
 	sta player_state + PLAYER_DYOFF, x
 	sta temp

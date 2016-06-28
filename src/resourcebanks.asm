@@ -1,6 +1,18 @@
 ;Some banks mostly contain data rather than code.
 
 
+; Players
+; =======
+;
+; Player scripts and stats information structs are stored in BANKF so as to not
+; require any banking. 
+; Player graphics are stored in other banks, determined by the player file.
+;
+; Players will make their own segment assigments and therefore that should not
+; be assigned here.
+;
+.include "../assets/char/girl.asm"
+
 ; CHR
 .segment "BANK0"
 
@@ -15,23 +27,3 @@ field1_table:
 
 playfield_palettes:
 	.incbin "assets/gfx1.dat"
-
-; Sets of two sprite palette entries, specifying colors.
-; The first of a pair should have $30 in the fourth entry, as the disc uses the
-; first sprite palette.
-; The third color may be overwritten as a skin color, but it defaults to $35.
-player_palettes:
-	;     null blck skin extra
-	.byte $00, $0F, $35, $30
-	.byte $00, $0F, $35, $11
-	;     null blck skin extra
-	.byte $00, $0F, $26, $30
-	.byte $00, $0F, $26, $15
-	;     null blck skin extra
-	.byte $00, $0F, $17, $30
-	.byte $00, $0F, $17, $1A
-
-
-; Player graphics
-.segment "BANK2"
-	.include "player_gfx.asm"
