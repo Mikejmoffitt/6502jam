@@ -1,8 +1,4 @@
 ; character_girl character file
-;
-
-
-
 
 ; Scripts should be in BANKF to not require banking.
 .segment "BANKF"
@@ -295,13 +291,6 @@ girl_anim_block:
 	.addr	girl_mapping_block0 ; -----------
 	.byte	3, 0
 
-girl_anim_slide_down:		; TODO: Individual slide mapping
-girl_anim_slide_up:		; TODO: Individual slide mapping
-	.byte 	1
-	.byte	0
-	.addr	girl_mapping_dummy
-	.byte	2, 0
-
 girl_anim_slide_fwd:
 	.byte	2
 	.byte	0
@@ -312,6 +301,7 @@ girl_anim_slide_fwd:
 	.addr	girl_mapping_slide_fwd1 ; ------
 	.byte	3, 0
 
+girl_anim_slide_down:		; TODO: Individual slide mapping
 girl_anim_slide_fwddown:
 	.byte	2
 	.byte	0
@@ -322,6 +312,7 @@ girl_anim_slide_fwddown:
 	.addr	girl_mapping_slide_fwddown1
 	.byte	3, 0
 
+girl_anim_slide_up:		; TODO: Individual slide mapping
 girl_anim_slide_fwdup:
 	.byte	2
 	.byte	0

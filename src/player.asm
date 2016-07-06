@@ -79,7 +79,5 @@ PLAYER_THROW_CNTOFF = $23		; Counts down while player is in throwing animation.
 
 ; characeter_x struct offsets
 
-
-
 .include "player_movement.asm"
 .include "player_render.asm"

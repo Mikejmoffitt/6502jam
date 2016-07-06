@@ -13,7 +13,7 @@
 ;
 .include "../assets/char/girl.asm"
 
-; CHR
+; Playfield data
 .segment "BANK0"
 
 gfx1:
