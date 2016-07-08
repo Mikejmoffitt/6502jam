@@ -1,81 +1,5 @@
 ; Movement and physucs-related player code
 
-; ========================================
-; Collision checks against disc 
-; No preconditions.
-players_check_disc:
-	ldx #$00
-	jsr player_check_disc
-	ldx #PLAYER_SIZE
-	jsr player_check_disc
-	rts
-
-
-; ========================================
-; Check one player against the disc.
-; Preconditions:
-;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
-player_check_disc:
-; Check left of disc against right of player
-	lda player_state + PLAYER_XOFF + 1, x
-	clc
-	adc #PLAYER_W/2
-	sta temp
-
-	lda disc_state + DISC_XOFF + 1
-	sec
-	sbc #DISC_W/2
-
-	cmp temp
-	beq @nocollision
-	bcs @nocollision
-
-; Check right of disc against left of player
-	lda player_state + PLAYER_XOFF + 1, x
-	sec
-	sbc #PLAYER_W/2
-	sta temp
-
-	lda disc_state + DISC_XOFF + 1
-	clc
-	adc #DISC_W/2
-
-	cmp temp
-	bcc @nocollision
-
-; Check top of disc against bottom of player
-	lda player_state + PLAYER_YOFF + 1, x
-	clc
-	adc #PLAYER_H/2
-	sta temp
-
-	lda disc_state + DISC_YOFF + 1
-	sec
-	sbc #DISC_H/2
-
-	cmp temp
-	beq @nocollision
-	bcs @nocollision
-
-; Check bottom of disc against top of player
-	lda player_state + PLAYER_YOFF + 1, x
-	sec
-	sbc #PLAYER_H/2
-	sta temp
-
-	lda disc_state + DISC_YOFF + 1
-	clc
-	adc #DISC_H/2
-
-	cmp temp
-	bcc @nocollision
-
-; Collision:	
-
-@nocollision:
-	
-	rts
-
 ; ==============================================
 ; Player deceleration routine. Used for when sliding.
 ; Pre-conditions:
@@ -313,7 +237,12 @@ player_counters:
 	lda player_state + PLAYER_THROW_CNTOFF, x
 	beq :+
 	dec player_state + PLAYER_THROW_CNTOFF, x
+	bne :+
+	lda $5555
+; Counter just now reached zero! Time to throw the disc.
+	jsr player_throw_disc ; <-- player_disc.asm
 :
+
 	rts
 
 ; ========================================
@@ -322,6 +251,8 @@ player_counters:
 ; ========================================
 players_move:
 	ldx #$00
+
+; Set up boundaries for position comparisons
 	lda playfield_left
 	sta temp7
 	lda playfield_center
@@ -329,7 +260,12 @@ players_move:
 
 @toploop:
 
-	; Process basic newtonian movement for both players
+; Is the player holding the disc?
+	lda player_state + PLAYER_HOLDING_DISCOFF, x
+; If so, go straight to counters and don't do any movement
+	bne @counters
+
+; Process basic newtonian movement for both players
 	clc
 	lda player_state + PLAYER_XOFF, x
 	adc player_state + PLAYER_DXOFF, x
@@ -346,7 +282,7 @@ players_move:
 	adc player_state + PLAYER_DYOFF + 1, x
 	sta player_state + PLAYER_YOFF + 1, x
 
-	; If slide count is > 0, run decelleration
+; If slide count is > 0, run decelleration
 	lda player_state + PLAYER_SLIDE_CNTOFF, x
 	beq @no_decel
 
@@ -355,12 +291,15 @@ players_move:
 @no_decel:
 
 	jsr player_check_bounds
+
+@counters:
 	jsr player_counters
 
 @postloop:
 	cpx #$00
 	bne @endloop
-	; Change X bounds for Player 2's loop
+	
+; Change X bounds for Player 2's loop
 	lda playfield_right 
 	sta temp8
 	lda playfield_center
@@ -385,8 +324,8 @@ players_handle_input:
         bne @post_inputs		; Skip input handling
 
 @normal_state_inputs:
-	jsr players_input_dpad	
-	jsr players_input_buttons
+	jsr player_input_dpad	
+	jsr player_input_buttons
 
 ; --- End of Loop ---
 @post_inputs:
@@ -397,6 +336,33 @@ players_handle_input:
 @endloop:
 	rts
 
+
+; ===================================================
+; Support subroutine for player_input_buttons
+; Preconditions:
+;	X is loaded with the offset for the player
+; Postconditions:
+;	Temp and Temp2 contain the pad and pad_prev data for the player
+; ===================================================
+player_load_pad_to_temp:
+
+; Load appropriate pad for P1 or P2 into temp and temp2
+	cpx #$00
+	bne @p2_check
+	lda pad_1
+	sta temp
+	lda pad_1_prev
+	sta temp2
+	rts
+
+@p2_check:
+	lda pad_2
+	sta temp
+	lda pad_2_prev
+	sta temp2
+
+	rts
+
 ; ====================================================
 ; A/B buttons subroutine for the input handler
 ; Preconditions:
@@ -404,8 +370,65 @@ players_handle_input:
 ; Postconditions:
 ;	Player has slide or block counters set based on inputs
 ; ====================================================
-players_input_buttons:
+player_input_buttons:
+	lda player_state + PLAYER_HOLDING_DISCOFF, x
+	beq @not_holding_disc
+	jsr player_load_pad_to_temp
 
+; If the throw counter is non-zero, don't accept inputs here
+	lda player_state + PLAYER_THROW_CNTOFF, x
+	beq :+
+	rts
+:
+
+; If the player hits A, set the throw countdown
+; Throw type is zero, for a normal throw
+	; Has A just been pressed?
+	lda temp
+	bit btn_a
+	beq :+
+	lda temp2
+	bit btn_a
+	bne :+
+	beq :++
+: ; NOT pressed
+	jmp @b_check	
+
+: ; Pressed
+
+	lda #PLAYER_THROW_DELAY
+	sta player_state + PLAYER_THROW_CNTOFF, x
+
+; TODO: Check if player is charged
+	lda #THROW_NORMAL
+	sta player_state + PLAYER_THROW_TYPEOFF, x
+	rts
+
+; If the player hits A, set the countdown, but mark it
+; as a lob in TYPEOFF
+@b_check:
+	lda temp
+	bit btn_b
+	beq :+
+	lda temp2
+	bit btn_b
+	bne :+
+	beq :++
+: ; NOT pressed
+	rts
+: ; Pressed
+
+	lda #PLAYER_THROW_DELAY
+	sta player_state + PLAYER_THROW_CNTOFF, x
+
+; TODO: Check if player is charged
+	lda #THROW_LOB
+	sta player_state + PLAYER_THROW_TYPEOFF, x
+	rts
+	
+	
+
+@not_holding_disc:
 
 ; If either counter is non-zero, don't accept inputs here
 	lda player_state + PLAYER_SLIDE_CNTOFF, x
@@ -423,35 +446,20 @@ players_input_buttons:
 	rts
 :
 
-; Load appropriate pad for P1 or P2 into temp and temp2
-	cpx #$00
-	bne @p2_check
-	lda pad_1
-	sta temp
-	lda pad_1_prev
-	sta temp2
-	jmp @check_a_button
-
-@p2_check:
-	lda pad_2
-	sta temp
-	lda pad_2_prev
-	sta temp2
-
-
-@check_a_button:
-	; Has A just been pressed?
+; Check if the player hit A
+	jsr player_load_pad_to_temp
 	lda temp
 	bit btn_a
-	beq @not_a
+	beq :+
 	lda temp2
 	bit btn_a
-	bne @not_a
-	beq @a_pressed
-@not_a:
+	bne :+
+	beq :++
+
+: ; NOT pressed
 	rts
 
-@a_pressed:
+: ; Pressed
 
 ; Check if the player is moving
 ; At this point, A = 0 (otherwise we would not be here)
@@ -583,7 +591,13 @@ players_input_buttons:
 ; Postconditions:
 ;	Player state struct has been modified based on D-Pad inputs
 ; ====================================================
-players_input_dpad:
+player_input_dpad:
+	lda player_state + PLAYER_HOLDING_DISCOFF, x
+	beq @not_holding_disc
+; Disc is held, check for curved throws
+	rts
+
+@not_holding_disc:
 ; First check validity - if the player is blocking, sliding, charging, or 
 ; throwing, ignore the dpad here.
 	lda player_state + PLAYER_SLIDE_CNTOFF, x

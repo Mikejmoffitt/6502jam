@@ -1,9 +1,12 @@
+; Player top-level code
+; =====================
 
+; Dimensions and rendering
 PLAYER_W = $0c
 PLAYER_H = $08
-
 PLAYER_SPR_NUM = 18
 
+; Directional constants
 PLAYER_DIR_RIGHT = $00
 PLAYER_DIR_LEFT = $01
 PLAYER_DIR_DOWN = $00
@@ -14,6 +17,7 @@ PLAYER_FACING_DOWN = $01
 PLAYER_FACING_LEFT = $02
 PLAYER_FACING_RIGHT = $03
 
+; Animation sequences
 ANIM_STAND_FWD 		= $00
 ANIM_STAND_UP 		= $01
 ANIM_STAND_DOWN		= $02
@@ -27,12 +31,24 @@ ANIM_SLIDE_FWDDOWN	= $09
 ANIM_SLIDE_UP		= $0A
 ANIM_SLIDE_DOWN		= $0B
 
+; Tag for an animation mapping end
 MAP_END			= $7F
 
+; Types of throws
+THROW_NORMAL = $00
+THROW_LOB = $01
+THROW_WHEEL = $02
+THROW_SPECIAL = $03
+
+; Timing constants
 PLAYER_BLOCK_DELAY = $0D
 PLAYER_SLIDE_DELAY = $03
+PLAYER_THROW_DELAY = $09
+PLAYER_CHARGE_THRESH = $20
 
-; player_state member offsets
+; ------------------------ Struct Offsets -----------------------
+
+; Stats struct offsets
 STATS_WALK_S = $00
 STATS_WALK_D = $02
 STATS_DASH_STR = $04
@@ -77,7 +93,16 @@ PLAYER_CHARGE_CNTOFF = $22		; Counts upwards when the player is under the disc's
 					; drop target. Controls lock when non-zero, dx/dy zeroed.
 PLAYER_THROW_CNTOFF = $23		; Counts down while player is in throwing animation.
 
-; characeter_x struct offsets
+PLAYER_HOLDING_DISCOFF = $24		; When nonzero, player is holding the disc.
 
+PLAYER_THROW_TYPEOFF = $25
+
+; Basic player in-game logic
+.segment "BANKE"
 .include "player_movement.asm"
 .include "player_render.asm"
+.include "player_disc.asm"
+
+; Player initialization must be in the fixed bank.
+.segment "BANKF"
+.include "player_setup.asm"

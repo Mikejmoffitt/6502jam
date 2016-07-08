@@ -1,3 +1,5 @@
+.segment "BANKF"
+
 wait_nmi:
 	 lda vblank_flag
 	 bne wait_nmi			; Spin here until NMI lets us through
@@ -56,36 +58,6 @@ read_joy_safe:
 	bne :-
 	rts
 
-player_load_gfx:
-	lda #$00
-	sta temp
-	sta temp2
-	inc temp2
-					; Temp.w contains the amount to increment
-					; addr_ptr by during each loop
-
-	ldx #$00			; Lower byte of VRAM destination
-
-; Latch starting address into PPUADDR
-	bit PPUSTATUS
-	sty PPUADDR
-	stx PPUADDR
-
-	ldy #$00
-	ldx #$00
-
-; Copy from (addr_ptr), $700 bytes
-:
-	lda (addr_ptr), y		; Offset within both girl_chr and dest.
-	sta PPUDATA
-	iny
-	bne :-
-	sum16 addr_ptr, temp		; Increment source by $100
-	inx
-	cpx #$07
-	bne :-
-	rts
-
 fence_mask_draw:
 	; Mask bottom of playfield
 	lda #FENCE_SPR_Y
@@ -126,4 +98,15 @@ fence_mask_draw:
 	write_oam_attr 6
 	write_oam_attr 7
 	write_oam_attr 8
+	rts
+
+; Clear the OAM table
+spr_init:
+	ldx #$00
+	lda #$FF
+@clroam_loop:
+	sta OAM_BASE, x
+	inx
+	cpx #$00
+	bne @clroam_loop
 	rts
