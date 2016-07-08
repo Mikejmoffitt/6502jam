@@ -1,6 +1,7 @@
 .segment "ZEROPAGE"
 
 PLAYER_SIZE = $30
+DISC_SIZE = $20
 
 	 temp:				.res 1
 	 temp2:				.res 1
@@ -18,13 +19,7 @@ player_state:
 	.res PLAYER_SIZE
 
 disc_state:
-	 disc_x:			.res 2
-	 disc_y:			.res 2
-	 disc_z:			.res 2
-	 disc_dx:			.res 2
-	 disc_dy:			.res 2
-	 disc_dz:			.res 2
-	 disc_anim:			.res 1
+	.res DISC_SIZE
 
 .segment "RAM"
 	vblank_flag:			.res 1

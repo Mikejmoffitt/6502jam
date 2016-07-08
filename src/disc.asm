@@ -1,4 +1,7 @@
-; Routines for the flying disc
+; Routines for the flying disc.
+; This serves as the base for the disc's state and processing, but all 
+; functions here are reflexive - the disc acting on the disc. Interactions
+; between the disc and other objects will be done elsewhere.
 
 
 DISC_H = $0c
@@ -14,31 +17,31 @@ DISC_ZOFF = $04
 DISC_DXOFF = $06
 DISC_DYOFF = $08
 DISC_DZOFF = $0a
-DISC_ANIM_OFF = $0c
-
+DISC_ANIMOFF = $0c
 
 ; ============================
 ;  Initialize disc
 ; ============================
 disc_init:
-	lda #$80
-	sta disc_y+1
-	sta disc_x+1
+; Zero out the disc's variables
+	ldx #DISC_SIZE
 	lda #$00
-	sta disc_y
-	sta disc_x
-	sta disc_dy
-	sta disc_dy+1
-	sta disc_dx
-	sta disc_dx+1
-	sta disc_dz
-	sta disc_dz+1
+@clear_loop:
+	sta disc_state, x
+	dex
+	bne @clear_loop
+
+; Initialize some physics stuff
+	lda #$80
+	sta disc_state + DISC_YOFF + 1
+	sta disc_state + DISC_XOFF + 1
+
 	lda #DISC_NOMINAL_Z
-	sta disc_z+1
+	sta disc_state + DISC_DZOFF + 1
 
 	lda #$40
-	sta disc_dx
-	sta disc_dy
+	sta disc_state + DISC_DXOFF
+	sta disc_state + DISC_DYOFF
 	rts
 
 ; ============================
@@ -47,28 +50,28 @@ disc_init:
 
 disc_move:
 	; Apply vectors
-	sum16 disc_x, disc_dx
-	sum16 disc_y, disc_dy
-	sum16 disc_z, disc_dz
+	sum16 disc_state + DISC_XOFF, disc_state + DISC_DXOFF
+	sum16 disc_state + DISC_YOFF, disc_state + DISC_DYOFF
+	sum16 disc_state + DISC_ZOFF, disc_state + DISC_DZOFF
 
 	; Check that the disc is moving upwards first
-	lda disc_dy+1
+	lda disc_state + DISC_YOFF+1
 	bpl @moving_downwards
 
 	; Top
 	lda playfield_top
 	clc
 	adc #(DISC_H/2)
-	cmp disc_y+1
+	cmp disc_state + DISC_YOFF+1
 	bcc @h_check
-	sta disc_y+1		    ; Clamp disc Y to top of playfield
-	stx disc_y		      ;
+	sta disc_state + DISC_YOFF+1		    ; Clamp disc Y to top of playfield
+	stx disc_state + DISC_YOFF		      ;
 	jmp @flip_dy		    ; Invert dY
 
 @moving_downwards:
 
 	; Bottom
-	lda disc_y+1
+	lda disc_state + DISC_YOFF+1
 	clc
 	adc #(DISC_H/2)		     ; Offset by height of disc
 	cmp playfield_bottom
@@ -76,36 +79,36 @@ disc_move:
 	lda playfield_bottom
 	sec
 	sbc #(DISC_H/2)		     ;
-	sta disc_y+1		    ; Clamp disc Y to top of playfield
-	stx disc_y		      ;
+	sta disc_state + DISC_YOFF+1		    ; Clamp disc Y to top of playfield
+	stx disc_state + DISC_YOFF		      ;
 	jmp @flip_dy		    ; Invert dY
 
 
 @flip_dy:
 	; Invert dY
-	neg16 disc_dy
+	neg16 disc_state + DISC_YOFF
 
 @h_check:
 	; Check which way the disc is going
-	lda disc_dx+1
+	lda disc_state + DISC_DXOFF+1
 	bpl @moving_rightwards
 
 	; Left bound first
 	lda playfield_left
 	clc
 	adc #(DISC_W/2)
-	cmp disc_x+1
+	cmp disc_state + DISC_XOFF+1
 	bcc @xy_done
 
-	sta disc_x+1
-	stx disc_x
-	stx disc_dx+1
-	stx disc_dx
+	sta disc_state + DISC_XOFF+1
+	stx disc_state + DISC_XOFF
+	stx disc_state + DISC_DXOFF+1
+	stx disc_state + DISC_DXOFF
 
 	jmp @xy_done
 
 @moving_rightwards:
-	lda disc_x+1
+	lda disc_state + DISC_XOFF+1
 	clc
 	adc #(DISC_W/2)		     ;Offset by width of disc
 	cmp playfield_right
@@ -113,36 +116,36 @@ disc_move:
 	lda playfield_right
 	sec
 	sbc #(DISC_W/2)		     ;
-	sta disc_x+1		    ;X clamping
+	sta disc_state + DISC_XOFF+1		    ;X clamping
 	ldx #$00
-	stx disc_x
-	stx disc_dx+1
-	stx disc_dx
+	stx disc_state + DISC_XOFF
+	stx disc_state + DISC_DXOFF+1
+	stx disc_state + DISC_DXOFF
 
 @xy_done:
-	lda disc_z+1
+	lda disc_state + DISC_DZOFF+1
 	bmi @clamp_z
 	cmp #DISC_MAX_Z
 	bpl @clamp_z_hi
 	rts
 @clamp_z:
 	lda #$00
-	sta disc_z
-	sta disc_z+1
-	sta disc_dz
-	sta disc_dz+1
-	sta disc_dx
-	sta disc_dx+1
-	sta disc_dy
-	sta disc_dy+1
+	sta disc_state + DISC_DZOFF
+	sta disc_state + DISC_DZOFF+1
+	sta disc_state + DISC_DZOFF
+	sta disc_state + DISC_DZOFF+1
+	sta disc_state + DISC_DXOFF
+	sta disc_state + DISC_DXOFF+1
+	sta disc_state + DISC_YOFF
+	sta disc_state + DISC_YOFF+1
 	rts
 @clamp_z_hi:
 	lda #DISC_MAX_Z
-	sta disc_z+1
+	sta disc_state + DISC_DZOFF+1
 	lda #$00
-	sta disc_z
-	sta disc_dz
-	sta disc_dz+1
+	sta disc_state + DISC_DZOFF
+	sta disc_state + DISC_DZOFF
+	sta disc_state + DISC_DZOFF+1
 	rts
 
 ; ============================
@@ -159,15 +162,15 @@ disc_draw:
 	sta temp
 	sta temp2
 	; Increment disc animation counter
-	ldy disc_anim
+	ldy disc_state + DISC_ANIMOFF
 	iny
-	sty disc_anim
+	sty disc_state + DISC_ANIMOFF
 	; Y position
-	lda disc_y+1
+	lda disc_state + DISC_YOFF+1
 	sec
 	sbc #((DISC_H/2)+1)		; Disc height offset
 	sec
-	sbc disc_z+1			; Disc Z offset
+	sbc disc_state + DISC_DZOFF+1			; Disc Z offset
 	sec
 	sbc yscroll			; Y scroll offset
 
@@ -199,14 +202,14 @@ disc_draw:
 
 @tile_sel:
 	; Tile selection
-	lda disc_anim
+	lda disc_state + DISC_ANIMOFF
 	and #%0001000
 
 	bne @firsthalf_anim
 	jmp @secondhalf_anim
 
 @firsthalf_anim:
-	lda disc_anim
+	lda disc_state + DISC_ANIMOFF
 	and #%0000110
 
 	write_oam_tile DISC_SPR_NUM
@@ -230,7 +233,7 @@ disc_draw:
 	write_oam_attr DISC_SPR_NUM + 3
 
 	; X position
-	lda disc_x+1
+	lda disc_state + DISC_XOFF+1
 	sec
 	sbc #(DISC_W/2)
 	write_oam_x DISC_SPR_NUM
@@ -244,7 +247,7 @@ disc_draw:
 
 @secondhalf_anim:
 	ldy temp
-	lda disc_anim
+	lda disc_state + DISC_ANIMOFF
 	and #%0000110
 	lsr
 	sta temp
@@ -274,7 +277,7 @@ disc_draw:
 	write_oam_attr DISC_SPR_NUM + 3
 
 	; X position
-	lda disc_x+1
+	lda disc_state + DISC_XOFF+1
 	sec
 	sbc #((DISC_W/2)+03)
 	sec
@@ -306,7 +309,7 @@ disc_draw:
 
 	; Every other frame, a shadow is drawn with sprites 5-8
 	; Shadow Y
-	lda disc_y+1
+	lda disc_state + DISC_YOFF+1
 	sec
 	sbc #(DISC_H/2)
 	sec
@@ -326,10 +329,10 @@ disc_draw:
 
 
 	; Shadow X
-	lda disc_z+1
+	lda disc_state + DISC_DZOFF+1
 	lsr
 	clc
-	adc disc_x+1
+	adc disc_state + DISC_XOFF+1
 	sec
 	sbc xscroll
 	sec
