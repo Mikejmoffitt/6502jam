@@ -343,14 +343,22 @@ girl_anims:
 	.addr	girl_anim_slide_up
 	.addr	girl_anim_slide_down
 
-; =========== Palettes
-girl_pal:
-	;     null blck skin extra
-	.byte $00, $0F, $35, $30
-	.byte $00, $0F, $35, $11
-	;     null blck skin extra
-	.byte $00, $0F, $26, $30
-	.byte $00, $0F, $26, $15
+
+.macro throw_stats_macro arg
+	.word (256 * arg) / 128;		; dx; Fwd
+	.word (0 * arg) / 128;			; dy; Fwd (nonzero would be nonsensical)
+
+	.word (9000 * arg) / 128;		; dx; Dn-Fwd
+	.word (300 * arg) / 128;		; dy; Dn-Fwd
+
+	.word (500 * arg) / 128;		; dx; Dn
+	.word (700 * arg) / 128;		; dy; Dn
+
+	.word (200 * arg) / 128;		; dx; Dn-Back
+	.word (1000 * arg) / 128;		; dy; Dn-Back
+
+.endmacro
+
 
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
@@ -362,23 +370,43 @@ girl_pal:
 ;	fix16: Walk speed (Diagonal); should be orthagonal * 0.707
 ;	fix16: Dash strength
 ;	fix16: Dash decel magnitude
-;	fix16: Throw strength
-;	fix16: Throw time-stale factor
 
 character_girl:
+; Movement physics data
 	.word	400		; Straight walk speed
 	.word	282		; Diagonal walk speed
 	.word	1136		; Dash strength
 	.word	88		; Fast dash decel
 	.word	34		; Slow dash decel
-	.word	640		; Max throw strength
-	.word	40		; Throw time-stale factor
+; Four bytes doing nothing
+	.byte $00, $00
+	.byte $00, $00
+; Asset information
 	.byte	2		; Graphics data bank number
 	.addr	girl_chr	; Graphics data pointer
 	.addr	girl_pal	; Pointer to palette data
 	.addr	girl_anims	; Pointer to animation table
 
+; Throw stats
+	throw_stats_macro 128	; Stats for a normal throw
+	throw_stats_macro 192	; Stats for a strong throw
+	throw_stats_macro 96	; Stats for a weak throw
+
+
+.delmacro throw_stats_macro
+
+
+
 ; Character graphics
 .segment "BANK2"
+	
 	girl_chr:
-	.incbin "../assets/cmaps/girl.chr"
+	.incbin "../assets/char/girl.chr";
+	
+	girl_pal:
+	;     null blck skin extra
+	.byte $00, $0F, $35, $30
+	.byte $00, $0F, $35, $11
+	;     null blck skin extra
+	.byte $00, $0F, $26, $30
+	.byte $00, $0F, $26, $15

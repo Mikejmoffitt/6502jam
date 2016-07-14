@@ -203,3 +203,6 @@ player_throw_disc:
 	stx disc_state + DISC_LAST_PLAYEROFF
 
 	rts
+
+; -----------------------------------
+; Determine the disc's 

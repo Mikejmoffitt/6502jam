@@ -123,6 +123,12 @@ player_load:
 	lda #$FF
 	sta player_state + PLAYER_ANIM_NUMOFF, x
 
+; Load data bank number
+	ldy #STATS_CHR_BANK
+	lda (addr_ptr), y
+	tay
+	sta bank_load_table, y
+
 ; - Load player palette
 	ldy #STATS_PAL_PTR
 	lda (addr_ptr), y
@@ -165,11 +171,6 @@ player_load:
 
 
 ; - Load CHR into VRAM
-	; Load bank number
-	ldy #STATS_CHR_BANK
-	lda (addr_ptr), y
-	tay
-	sta bank_load_table, y
 
 ; Back up player ptr into temp
 	lda addr_ptr
