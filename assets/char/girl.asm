@@ -346,7 +346,7 @@ girl_anims:
 
 .macro throw_stats_macro arg
 	.word (256 * arg) / 128;		; dx; Fwd
-	.word (0 * arg) / 128;			; dy; Fwd (nonzero would be nonsensical)
+	.word 0;				; dy; Fwd (nonzero would be nonsensical)
 
 	.word (9000 * arg) / 128;		; dx; Dn-Fwd
 	.word (300 * arg) / 128;		; dy; Dn-Fwd
@@ -378,9 +378,6 @@ character_girl:
 	.word	1136		; Dash strength
 	.word	88		; Fast dash decel
 	.word	34		; Slow dash decel
-; Four bytes doing nothing
-	.byte $00, $00
-	.byte $00, $00
 ; Asset information
 	.byte	2		; Graphics data bank number
 	.addr	girl_chr	; Graphics data pointer

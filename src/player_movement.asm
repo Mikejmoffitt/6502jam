@@ -47,7 +47,6 @@ player_decel:
 	sta temp3
 	lda player_state + PLAYER_DXOFF + 1, x
 	sta temp3+1
-	sta $5555
 
 ; Check sign of dx
 	bpl @dx_positive
@@ -238,10 +237,12 @@ player_counters:
 	beq :+
 	dec player_state + PLAYER_THROW_CNTOFF, x
 	bne :+
-	lda $5555
 ; Counter just now reached zero! Time to throw the disc.
 	jsr player_throw_disc ; <-- player_disc.asm
 :
+
+	jsr player_run_hold_counter ; <-- player_disc.asm
+
 
 	rts
 

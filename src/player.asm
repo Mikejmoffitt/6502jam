@@ -44,6 +44,7 @@ THROW_SPECIAL = $03
 PLAYER_BLOCK_DELAY = $0D
 PLAYER_SLIDE_DELAY = $03
 PLAYER_THROW_DELAY = $09
+PLAYER_AUTOTHROW_DELAY = 44
 PLAYER_CHARGE_THRESH = $20
 
 ; ------------------------ Struct Offsets -----------------------
@@ -54,12 +55,11 @@ STATS_WALK_D = $02
 STATS_DASH_STR = $04
 STATS_DECEL_F = $06
 STATS_DECEL_S = $08
-STATS_THROW_STR = $0A
-STATS_THROW_STALE = $0C
-STATS_CHR_BANK = $0E
-STATS_CHR_PTR = $0F
-STATS_PAL_PTR = $11
-STATS_ANIM_PTR = $13
+STATS_CHR_BANK = $0A
+STATS_CHR_PTR = $0B
+STATS_PAL_PTR = $0D
+STATS_ANIM_PTR = $0F
+STATS_THROWS = $10
 
 ; Basic movement variables
 PLAYER_XOFF = $00
@@ -96,6 +96,8 @@ PLAYER_THROW_CNTOFF = $23		; Counts down while player is in throwing animation.
 PLAYER_HOLDING_DISCOFF = $24		; When nonzero, player is holding the disc.
 
 PLAYER_THROW_TYPEOFF = $25
+
+PLAYER_HOLD_CNTOFF = $26		; How long has the player been holding the disc?
 
 ; Basic player in-game logic
 .segment "BANKE"
