@@ -389,10 +389,7 @@ character_girl:
 	throw_stats_macro 192	; Stats for a strong throw
 	throw_stats_macro 96	; Stats for a weak throw
 
-
 .delmacro throw_stats_macro
-
-
 
 ; Character graphics
 .segment "BANK2"

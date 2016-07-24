@@ -197,7 +197,7 @@ player_do_normal_throw:
 ; Using the pad state, determine which throw is to be used and add to temp2
 	
 	; TODO: Implement this one too. For now, use fwd (0).
-	ldy #$00
+	ldy #STATS_THROWS
 	lda (addr_ptr), y
 	sta disc_state + DISC_DXOFF
 	iny
