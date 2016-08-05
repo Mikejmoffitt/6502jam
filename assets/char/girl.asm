@@ -345,10 +345,10 @@ girl_anims:
 
 
 .macro throw_stats_macro arg
-	.word (256 * arg) / 128;		; dx; Fwd
+	.word (1100 * arg) / 128;		; dx; Fwd
 	.word 0;				; dy; Fwd (nonzero would be nonsensical)
 
-	.word (9000 * arg) / 128;		; dx; Dn-Fwd
+	.word (900 * arg) / 128;		; dx; Dn-Fwd
 	.word (300 * arg) / 128;		; dy; Dn-Fwd
 
 	.word (500 * arg) / 128;		; dx; Dn
@@ -385,7 +385,7 @@ character_girl:
 	.addr	girl_anims	; Pointer to animation table
 
 ; Throw stats
-	throw_stats_macro 192	; Stats for a strong throw
+	throw_stats_macro 202	; Stats for a strong throw
 	throw_stats_macro 128	; Stats for a normal throw
 	throw_stats_macro 96	; Stats for a weak throw
 

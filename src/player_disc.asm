@@ -7,19 +7,20 @@
 ;	X is loaded with the offset for the player (0 or PLAYER_SIZE)
 ; ========================================
 player_run_hold_counter:
-	lda $5555
 ; Abort if a throw is already in progress.
 	lda player_state + PLAYER_THROW_CNTOFF, x
-	bne @do_not_run_counter
+	beq @not_throwing
+	rts
+
+@not_throwing:
 ; Is the player holding the disc?
 	lda player_state + PLAYER_HOLDING_DISCOFF, x
-	bne :+
-; Set the holding timer to zero and return if not.
-@do_not_run_counter:
-	sta player_state + PLAYER_HOLD_CNTOFF, x
+	bne @counter_inc
+; Abort if any conditions failed.
 	rts
-: 
-; If so, increment the timer
+
+; Increment the timer.
+@counter_inc:
 	inc player_state + PLAYER_HOLD_CNTOFF, x
 	lda player_state + PLAYER_HOLD_CNTOFF, x
 ; Have we reached the autothrow threshhold?
@@ -74,6 +75,9 @@ player_touched_disc:
 	sty player_state + PLAYER_DYOFF + 1, x
 	sty player_state + PLAYER_SLIDE_CNTOFF, x
 	sty player_state + PLAYER_BLOCK_CNTOFF, x
+
+; Clear hold-time counter
+	sty player_state + PLAYER_HOLD_CNTOFF, x
 	
 	rts
 
@@ -192,6 +196,7 @@ player_do_normal_throw:
 ; store it in temp2 to control throw strength / speed, based on how quickly
 ; the player chooses to throw after having caught the disc.
 
+	lda $5555
 	; Is the throw counter less than the strong cutoff?
 	lda player_state + PLAYER_HOLD_CNTOFF, x
 	cmp #PLAYER_THROW_STRONG_CUTOFF
