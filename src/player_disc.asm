@@ -25,6 +25,7 @@ player_run_hold_counter:
 ; Have we reached the autothrow threshhold?
 	cmp #PLAYER_AUTOTHROW_DELAY
 	beq :+
+; If not, get out of here
 	rts
 :
 ; If so, incur a throw
@@ -187,17 +188,43 @@ player_do_normal_throw:
 	lda player_state + PLAYER_STATS_ADDROFF + 1, x
 	sta addr_ptr + 1
 
-; Determine major offset (normal, strong, weak) inside of throws struct and
-; store it in temp2
+; Determine major offset (strong, normal, weak) inside of throws struct and
+; store it in temp2 to control throw strength / speed, based on how quickly
+; the player chooses to throw after having caught the disc.
 
-	; TODO: Implement at all. For now, use normal (0).
-	lda #$00
+	; Is the throw counter less than the strong cutoff?
+	lda player_state + PLAYER_HOLD_CNTOFF, x
+	cmp #PLAYER_THROW_STRONG_CUTOFF
+	bcs @throw_not_strong
+	; If so, use the strong throw stats
+	lda #THROW_STRONG_OFFSET
+	sta temp2
+	jmp @mod_direction
+
+@throw_not_strong:
+	; Is the throw counter less than the normal cutoff?
+	cmp #PLAYER_THROW_NORMAL_CUTOFF
+	bcs @throw_not_normal
+	; If so, use the normal throw stats
+	lda #THROW_NORMAL_OFFSET
+	sta temp2
+	jmp @mod_direction
+
+@throw_not_normal:
+	; Finally, fall back to the weak offset.
+	lda #THROW_WEAK_OFFSET
 	sta temp2
 
+@mod_direction:
 ; Using the pad state, determine which throw is to be used and add to temp2
-	
-	; TODO: Implement this one too. For now, use fwd (0).
-	ldy #STATS_THROWS
+	lda temp2
+	clc
+	adc #STATS_THROWS
+
+	; TODO: Add offset for throw direction to A here
+	; For now it uses fwd(0)
+	tay
+
 	lda (addr_ptr), y
 	sta disc_state + DISC_DXOFF
 	iny

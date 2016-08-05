@@ -385,8 +385,8 @@ character_girl:
 	.addr	girl_anims	; Pointer to animation table
 
 ; Throw stats
-	throw_stats_macro 128	; Stats for a normal throw
 	throw_stats_macro 192	; Stats for a strong throw
+	throw_stats_macro 128	; Stats for a normal throw
 	throw_stats_macro 96	; Stats for a weak throw
 
 .delmacro throw_stats_macro
