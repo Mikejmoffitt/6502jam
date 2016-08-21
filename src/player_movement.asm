@@ -18,7 +18,7 @@ player_decel:
 	cpx #$00
 	beq @p1_pad
 	lda pad_2
-	sta temp3	
+	sta temp3
 	jmp @load_decel_mag
 @p1_pad:
 	lda pad_1
@@ -125,7 +125,7 @@ player_decel:
 ; ===============================================
 ; Player movement support function
 ; Constrains the player in X to their respective
-; movement boundaries. 
+; movement boundaries.
 ; Pre-conditions:
 ;	X is loaded with player struct offset
 ;	Temp is loaded with the left boundary
@@ -243,7 +243,6 @@ player_counters:
 
 	jsr player_run_hold_counter ; <-- player_disc.asm
 
-
 	rts
 
 ; ========================================
@@ -299,14 +298,14 @@ players_move:
 @postloop:
 	cpx #$00
 	bne @endloop
-	
+
 ; Change X bounds for Player 2's loop
-	lda playfield_right 
+	lda playfield_right
 	sta temp8
 	lda playfield_center
 	sta temp7
 	ldx #PLAYER_SIZE
-	jmp @toploop	
+	jmp @toploop
 
 @endloop:
 	rts
@@ -325,7 +324,7 @@ players_handle_input:
         bne @post_inputs		; Skip input handling
 
 @normal_state_inputs:
-	jsr player_input_dpad	
+	jsr player_input_dpad
 	jsr player_input_buttons
 
 ; --- End of Loop ---
@@ -393,7 +392,7 @@ player_input_buttons:
 	bne :+
 	beq :++
 : ; NOT pressed
-	jmp @b_check	
+	jmp @b_check
 
 : ; Pressed
 
@@ -426,8 +425,8 @@ player_input_buttons:
 	lda #THROW_LOB
 	sta player_state + PLAYER_THROW_TYPEOFF, x
 	rts
-	
-	
+
+
 
 @not_holding_disc:
 
@@ -517,7 +516,7 @@ player_input_buttons:
 	sta player_state + PLAYER_DXOFF + 1, x
 
 	; dx now contains positive slide velocity
-		
+
 	jmp @y_check
 
 @left_check:
@@ -537,9 +536,9 @@ player_input_buttons:
 	sta player_state + PLAYER_DXOFF + 1, x
 
 	; dx now contains negative slide velocity
-	
+
 	jmp @y_check
-		
+
 
 @no_dx:
 	; Zero out dx, because neither left nor right were held.
@@ -549,7 +548,7 @@ player_input_buttons:
 
 @y_check:
 	; Re-load pad, A may have been mangled
-	lda temp 
+	lda temp
 	; Check for up.
 	bit btn_up
 	beq @down_check
@@ -568,7 +567,7 @@ player_input_buttons:
 	jmp @end_dir_check
 
 @down_check:
-	
+
 	lda temp
 	bit btn_down
 	beq @end_dir_check
@@ -581,7 +580,7 @@ player_input_buttons:
 	sta player_state + PLAYER_DYOFF + 1, x
 
 @end_dir_check:
-@a_not_pressed: 
+@a_not_pressed:
 
 	rts
 
@@ -599,7 +598,7 @@ player_input_dpad:
 	rts
 
 @not_holding_disc:
-; First check validity - if the player is blocking, sliding, charging, or 
+; First check validity - if the player is blocking, sliding, charging, or
 ; throwing, ignore the dpad here.
 	lda player_state + PLAYER_SLIDE_CNTOFF, x
 	beq :+
@@ -752,7 +751,7 @@ player_input_dpad:
 	sta player_state + PLAYER_DYOFF, x
 	iny
 	lda (addr_ptr), y
-	sta player_state + PLAYER_DYOFF+1, x 
+	sta player_state + PLAYER_DYOFF+1, x
 	lda #$00
 	sta player_state + PLAYER_DIRXOFF, x
 	sta player_state + PLAYER_DIRYOFF, x
@@ -764,11 +763,11 @@ player_input_dpad:
 	bne :+
 	ldy #STATS_WALK_D
 	lda (addr_ptr), y
-	sta player_state + PLAYER_DXOFF, x 
+	sta player_state + PLAYER_DXOFF, x
 	sta temp
 	iny
 	lda (addr_ptr), y
-	sta player_state + PLAYER_DXOFF+1, x 
+	sta player_state + PLAYER_DXOFF+1, x
 	sta temp2
 	neg16 temp
 	lda temp
@@ -836,7 +835,7 @@ player_input_dpad:
 	sta player_state + PLAYER_DXOFF+1, x
 	sta player_state + PLAYER_DYOFF, x
 	sta player_state + PLAYER_DYOFF+1, x
-; A pad has been checked; see if we need to now check the other or if we 
+; A pad has been checked; see if we need to now check the other or if we
 ; are completely finished.
 @post_dpad:
 	rts

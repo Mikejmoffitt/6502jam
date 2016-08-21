@@ -180,6 +180,22 @@ playfield_init:
 	ppu_disable
 
 	bank_load #$00
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
 	; Playfield #1's CHR data
 	ppu_write_32kbit gfx1 + $1000, #$10
 

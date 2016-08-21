@@ -35,7 +35,7 @@ player_run_hold_counter:
 	rts
 
 ; ========================================
-; Collision checks against disc 
+; Collision checks against disc
 ; No preconditions.
 players_check_disc:
 	ldx #$00
@@ -55,7 +55,7 @@ player_touched_disc:
 	lda player_state + PLAYER_BLOCK_CNTOFF, x
 	beq @disc_catch
 	neg16 disc_state + DISC_DXOFF
-	rts	
+	rts
 
 ; Player wasn't blocking, so just catch the disc:
 @disc_catch:
@@ -78,7 +78,7 @@ player_touched_disc:
 
 ; Clear hold-time counter
 	sty player_state + PLAYER_HOLD_CNTOFF, x
-	
+
 	rts
 
 ; ========================================
@@ -161,7 +161,7 @@ player_check_disc:
 	jsr player_touched_disc
 
 @nocollision:
-	
+
 	rts
 
 ; ==========================================
@@ -170,11 +170,11 @@ player_check_disc:
 ; Pre:
 ;	X is loaded with the player struct offset.
 ; Post:
-;	Disc state has been modified.	
+;	Disc state has been modified.
 ;	temp contains gamepad state for the player.
 ;	temp2 is mangled
 player_do_normal_throw:
-	
+
 ; Load pad info
 	cpx #$00
 	bne @use_p2_pad
@@ -185,6 +185,53 @@ player_do_normal_throw:
 	lda pad_2
 	sta temp
 @post_pad:
+	ldy #$00
+	sty temp3 ; Forward button is held
+	sty temp4 ; Backward button is held
+	dey
+
+; Determine if forward/back is held, store in temp3 and temp4
+	lda $5555
+	cpx #$00
+	bne @check_p2_dir
+	; Checking P1 fwd/back
+	lda temp
+	bit btn_right
+	; Is right held? (fwd)
+	bne @fwd_held_p1
+	bit btn_left
+	; Is left held? (back)
+	bne @back_held_p1
+	jmp @post_dirs
+
+@fwd_held_p1:
+	sty temp3 ; Mark forward as being held
+	jmp @post_dirs
+
+@back_held_p1:
+	sty temp4 ; Mark backward as being held
+	jmp @post_dirs
+
+@check_p2_dir:
+	; Checking P2 fwd/back
+	lda temp
+	bit btn_left
+	; Is left held? (fwd)
+	bne @fwd_held_p2
+	bit btn_right
+	; Is right held? (back)
+	bne @back_held_p2
+	jmp @post_dirs
+
+@fwd_held_p2:
+	sty temp3 ; Mark forward as being held
+	jmp @post_dirs
+
+@back_held_p2:
+	sty temp4 ; Mark backward as being held
+	; Fall through to @post_dirs
+
+@post_dirs:
 
 ; Get stats struct address in addr_ptr
 	lda player_state + PLAYER_STATS_ADDROFF, x
@@ -196,7 +243,6 @@ player_do_normal_throw:
 ; store it in temp2 to control throw strength / speed, based on how quickly
 ; the player chooses to throw after having caught the disc.
 
-	lda $5555
 	; Is the throw counter less than the strong cutoff?
 	lda player_state + PLAYER_HOLD_CNTOFF, x
 	cmp #PLAYER_THROW_STRONG_CUTOFF
@@ -228,6 +274,48 @@ player_do_normal_throw:
 
 	; TODO: Add offset for throw direction to A here
 	; For now it uses fwd(0)
+
+	; Back up offset we've built
+	sta temp5
+
+	; Are we holding up/down?
+	lda temp
+	bit btn_up
+	bne @up_held
+	bit btn_down
+	bne @down_held
+	; If not, use the forward throw vector
+	jmp @load_disc_vec
+
+@up_held:
+@down_held:
+	lda temp5
+	clc
+	adc #$04
+	sta temp5
+	; Are we holding forward?
+	lda temp3
+	; If so, we are done, already at dn-fwd
+	bne @load_disc_vec
+	; If not, are we holding backward?
+	lda temp4
+	bne @holding_back
+	; If not, just jump to the down-only offset
+	lda temp5
+	clc
+	adc #$04
+	sta temp5
+	jmp @load_disc_vec
+
+@holding_back:
+	lda temp5
+	clc
+	adc #$08
+	sta temp5
+	; Fall-through to @load_disc_vec
+
+@load_disc_vec:
+	lda temp5
 	tay
 
 	lda (addr_ptr), y
@@ -256,7 +344,7 @@ player_do_normal_throw:
 ; Preconditions:
 ;	X is loaded with the player struct offset.
 ; Postconditions:
-;	The disc's state has been modified in reflection of 
+;	The disc's state has been modified in reflection of
 ; 	the disc toss.
 player_throw_disc:
 

@@ -194,7 +194,7 @@ girl_mapping_slide_fwdup1:
 girl_mapping_dummy:
 	.byte	<-$20, <-$20, 0, 0
 	.byte	MAP_END
-	
+
 
 ; =============== Animation Scripts ===============
 ; Sequences of mappings to form animation sequences
@@ -316,7 +316,7 @@ girl_anim_slide_up:		; TODO: Individual slide mapping
 girl_anim_slide_fwdup:
 	.byte	2
 	.byte	0
-	
+
 	.addr	girl_mapping_slide_fwdup0
 	.byte	3, 0
 
@@ -371,6 +371,9 @@ girl_anims:
 ;	fix16: Dash strength
 ;	fix16: Dash decel magnitude
 
+	.byte $ED
+	.byte $80, $12
+
 character_girl:
 ; Movement physics data
 	.word	400		; Straight walk speed
@@ -387,16 +390,16 @@ character_girl:
 ; Throw stats
 	throw_stats_macro 202	; Stats for a strong throw
 	throw_stats_macro 128	; Stats for a normal throw
-	throw_stats_macro 96	; Stats for a weak throw
+	throw_stats_macro 56	; Stats for a weak throw
 
 .delmacro throw_stats_macro
 
 ; Character graphics
 .segment "BANK2"
-	
+
 	girl_chr:
 	.incbin "../assets/char/girl.chr";
-	
+
 	girl_pal:
 	;     null blck skin extra
 	.byte $00, $0F, $35, $30
