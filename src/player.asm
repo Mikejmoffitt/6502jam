@@ -2,8 +2,8 @@
 ; =====================
 
 ; Dimensions and rendering
-PLAYER_W = $0c
-PLAYER_H = $08
+PLAYER_W = $0e
+PLAYER_H = $0a
 PLAYER_SPR_NUM = 18
 
 ; Directional constants
