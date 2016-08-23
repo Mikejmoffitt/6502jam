@@ -1,5 +1,5 @@
 ; Routines for the flying disc.
-; This serves as the base for the disc's state and processing, but all 
+; This serves as the base for the disc's state and processing, but all
 ; functions here are reflexive - the disc acting on the disc. Interactions
 ; between the disc and other objects will be done elsewhere.
 
@@ -21,7 +21,7 @@ DISC_DYOFF = $08
 DISC_DZOFF = $0a
 
 ; Misc gameplay
-DISC_ANIMOFF = $0c	; Animation counter	
+DISC_ANIMOFF = $0c	; Animation counter
 DISC_GRAV_ENOFF = $0d	; If nonzero, dz += gravity
 DISC_HELDOFF = $0e	; If nonzero, hide disc and don't move it
 DISC_FLIPPINGOFF = $0f	; If nonzero, show flipping anim, have gravity
@@ -56,7 +56,7 @@ disc_init:
 	sta disc_state + DISC_DXOFF+1
 	sta disc_state + DISC_DYOFF+1
 	sta disc_state + DISC_LAST_PLAYEROFF
-	
+
 	rts
 
 ; ============================
@@ -72,7 +72,7 @@ disc_move:
 ; If so, set some defaults and exit
 
 ; Turn off disc gravity
-	stx disc_state + DISC_GRAV_ENOFF 
+	stx disc_state + DISC_GRAV_ENOFF
 
 ; Put disc back at normal height (if it had been lobbed)
 	lda #DISC_NOMINAL_Z
@@ -99,23 +99,23 @@ disc_move:
 	cmp disc_state + DISC_YOFF+1
 	bcc @h_check
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
-	stx disc_state + DISC_YOFF		    
-	jmp @flip_dy		    		; Invert dY
+	stx disc_state + DISC_YOFF
+	jmp @flip_dy				; Invert dY
 
 @moving_downwards:
 
 	; Bottom
 	lda disc_state + DISC_YOFF+1
 	clc
-	adc #(DISC_H/2)		     		; Offset by height of disc
+	adc #(DISC_H/2)				; Offset by height of disc
 	cmp playfield_bottom
 	bcc @h_check
 	lda playfield_bottom
 	sec
-	sbc #(DISC_H/2)		     
+	sbc #(DISC_H/2)
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
-	jmp @flip_dy		    		; Invert dY
+	jmp @flip_dy				; Invert dY
 
 
 @flip_dy:
@@ -134,26 +134,35 @@ disc_move:
 	cmp disc_state + DISC_XOFF+1
 	bcc @xy_done
 
+	; Clamp disc to left side
 	sta disc_state + DISC_XOFF+1
 	stx disc_state + DISC_XOFF
-	stx disc_state + DISC_DXOFF+1
-	stx disc_state + DISC_DXOFF
+
+	; Reverse dx
+	neg16 disc_state + DISC_DXOFF
+	;stx disc_state + DISC_DXOFF+1
+	;stx disc_state + DISC_DXOFF
 
 	jmp @xy_done
 
 @moving_rightwards:
 	lda disc_state + DISC_XOFF+1
 	clc
-	adc #(DISC_W/2)		     		;Offset by width of disc
+	adc #(DISC_W/2)				;Offset by width of disc
 	cmp playfield_right
 	bcc @xy_done
 	lda playfield_right
 	sec
-	sbc #(DISC_W/2)		     
-	sta disc_state + DISC_XOFF+1		;X clamping
+	sbc #(DISC_W/2)
+
+	; Clamp disc to right side
+	sta disc_state + DISC_XOFF+1
 	stx disc_state + DISC_XOFF
-	stx disc_state + DISC_DXOFF+1
-	stx disc_state + DISC_DXOFF
+
+	; Reverse dx
+	neg16 disc_state + DISC_DXOFF
+	;stx disc_state + DISC_DXOFF+1
+	;stx disc_state + DISC_DXOFF
 
 @xy_done:
 	; Has the disc landed onto the ground?
@@ -207,7 +216,7 @@ disc_draw:
 	rts
 
 @not_being_held:
-	
+
 	lda playfield_bottom
 	sec
 	sbc #$20
