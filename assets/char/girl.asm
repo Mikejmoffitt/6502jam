@@ -255,7 +255,7 @@ girl_anim_run_up:
 
 	.addr	girl_mapping_up0 ; ------------
 	.byte	5, 0
-
+		;X clamping
 	.addr	girl_mapping_up2 ; ------------
 	.byte	7, 0
 
@@ -345,17 +345,17 @@ girl_anims:
 
 
 .macro throw_stats_macro arg
-	.word (1100 * arg) / 128;		; dx; Fwd
+	.word (1000 * arg) / 128;		; dx; Fwd
 	.word 0;				; dy; Fwd (nonzero would be nonsensical)
 
-	.word (900 * arg) / 128;		; dx; Dn-Fwd
-	.word (300 * arg) / 128;		; dy; Dn-Fwd
+	.word (800 * arg) / 128;		; dx; Dn-Fwd
+	.word (400 * arg) / 128;		; dy; Dn-Fwd
 
-	.word (500 * arg) / 128;		; dx; Dn
-	.word (700 * arg) / 128;		; dy; Dn
+	.word (600 * arg) / 128;		; dx; Dn
+	.word (600 * arg) / 128;		; dy; Dn
 
-	.word (200 * arg) / 128;		; dx; Dn-Back
-	.word (1000 * arg) / 128;		; dy; Dn-Back
+	.word (400 * arg) / 128;		; dx; Dn-Back
+	.word (800 * arg) / 128;		; dy; Dn-Back
 
 .endmacro
 
