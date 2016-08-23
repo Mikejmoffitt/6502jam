@@ -243,7 +243,7 @@ player_do_normal_throw:
 ; store it in temp2 to control throw strength / speed, based on how quickly
 ; the player chooses to throw after having caught the disc.
 
-	; Is the throw counter less than the strong cutoff?
+; Is the throw counter less than the strong cutoff?
 	lda player_state + PLAYER_HOLD_CNTOFF, x
 	cmp #PLAYER_THROW_STRONG_CUTOFF
 	bcs @throw_not_strong
@@ -272,41 +272,41 @@ player_do_normal_throw:
 	clc
 	adc #STATS_THROWS
 
-	; TODO: Add offset for throw direction to A here
-	; For now it uses fwd(0)
-
-	; Back up offset we've built
+	; Back up offset we've built, we're going to mangle A to check the
+	; button / pad state
 	sta temp5
 
-	; Are we holding up/down?
+; Are we holding up/down?
 	lda temp
 	bit btn_up
 	bne @up_held
 	bit btn_down
 	bne @down_held
-	; If not, use the forward throw vector
+	; If not, use the forward throw vector (0), and we're done.
 	jmp @load_disc_vec
 
+	; If up or down are held, we use vectors 1-3, not 0
 @up_held:
 @down_held:
 	lda temp5
 	clc
 	adc #$04
 	sta temp5
-	; Are we holding forward?
+; Are we holding forward?
 	lda temp3
-	; If so, we are done, already at dn-fwd
+	; If so, we are done, already at dn-fwd index (4).
 	bne @load_disc_vec
 	; If not, are we holding backward?
 	lda temp4
 	bne @holding_back
-	; If not, just jump to the down-only offset
+	; If not, just jump to the down-only offset (8)
 	lda temp5
 	clc
 	adc #$04
 	sta temp5
 	jmp @load_disc_vec
 
+	; Holding back, go to the dn-back offset (12)
 @holding_back:
 	lda temp5
 	clc
@@ -315,9 +315,11 @@ player_do_normal_throw:
 	; Fall-through to @load_disc_vec
 
 @load_disc_vec:
+	; Restore calculated vector offset, put it in Y
 	lda temp5
 	tay
 
+	; Load disc vector from throw stats (addr_ptr) and apply
 	lda (addr_ptr), y
 	sta disc_state + DISC_DXOFF
 	iny
@@ -330,10 +332,20 @@ player_do_normal_throw:
 	lda (addr_ptr), y
 	sta disc_state + DISC_DYOFF + 1
 
+; Is the player holding up?
+	lda temp
+	bit btn_up
+	beq @check_p2_dx_reverse
+	; If so, reverse disc dy
+	neg16 disc_state + DISC_DYOFF
+
+@check_p2_dx_reverse:
 ; Is it player 2?
 	cpx #$00
 	bne @p2_neg_dx
+	; If not, we're done and can exit.
 	rts
+
 ; If so, negate dx to put the disc off to the left
 @p2_neg_dx:
 	neg16 disc_state + DISC_DXOFF
