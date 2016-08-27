@@ -406,4 +406,4 @@ character_girl:
 	.byte $00, $0F, $35, $11
 	;     null blck skin extra
 	.byte $00, $0F, $26, $30
-	.byte $00, $0F, $26, $15
+	.byte $00, $0F, $26, $16

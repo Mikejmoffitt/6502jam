@@ -12,3 +12,5 @@ src/*.swp
 assets/cmaps/*.swp
 labels.txt
 tools/fceux/fcs/*
+tools/sintab
+tools/*.o

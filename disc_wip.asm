@@ -37,18 +37,64 @@ DISC_CURVESTROFF = $12  ; Offset for disc curve intensity
 DISC_SPINNINGOFF = $13  ; If nonzero, disc is spinning using the table as
                         ; indicated by the number stored here
 
-DISC_SPINNING_CYCLE_POSOFF = $14 ; Position in spinning lookup table
-DISC_SPINNING_CYCLE_LENOFF = $15
-DISC_SPINNING_CYCLE_ADDROFF = $16
-DISC_SPINNING_CYCLE_DIROFF = $18 ; 0 = spinning right, 1 = spinning left
+DISC_SPINNING_CYCLE_ADDROFF = $14 ; Two words, for sine and cosine
+DISC_SPINNING_CYCLE_POSOFF = $18 ; Position in spinning lookup table
+DISC_SPINNING_CYCLE_LENOFF = $19
 
 .segment "BANKE"
 
-disc_spin_fast:
 .include "trig.asm"
 
+; Sets up the disc for spinning
+; Pre:
+;	A is loaded with the desired spin config
+disc_begin_spinning:
+	cmp #$00
+	bne @not_0
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF + 1
+	rts
+@not_0:
+	cmp #$01
+	bne @not_1
+	lda #<sin_512_24
+	clc
+	adc #$01
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF
+	lda #>sin_512_24
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF + 1
+
+	lda #<cos_512_24
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF + 2
+	lda #>cos_512_24
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF + 3
+
+	lda 
+
+@not_1:
+	rts
+
+; Movement function that makes the disc spin
+; Pre:
+;	None
+; Post:
+;	Disc has moved a bunch, hits walls and stuff
+
 do_spin:
-	lda math_sin_512_24
+	; Check that the disc is spinning
+	; ( that the spin cycle table address is non-NULL)
+	lda disc_state + DISC_SPINNING_CYCLE_ADDROFF
+	bne @nonzero
+	lda disc_state + DISC_SPINNING_CYCLE_ADDROFF+1
+	bne @nonzero
+	; We aren't spinning, get out of here
+	rts
+
+@nonzero:
+	lda #$01
+	jsr disc_begin_spinning
+;	; debug len
+	lda #24
 	sta disc_state + DISC_SPINNING_CYCLE_LENOFF
 	; /debug
 
@@ -56,45 +102,22 @@ do_spin:
 	clc
 	asl a
 	tay
-	iny ; Offset to remove the length
 
-	lda #<math_sin_512_24
-	sta addr_ptr
-	lda #>math_sin_512_24
-	sta addr_ptr+1
-
-	jmp @do_it_right
+	; Offset by 1, first byte is length
+	iny
 
 	; Load dx/dy pair for present index
-	lda math_sin_512_24, x
-	sta temp
-	inx
-	lda math_sin_512_24, x
-	sta temp2
-	dex
-	lda math_cos_512_24, x
-	sta temp3
-	inx
-	lda math_cos_512_24, x
-	sta temp4
-
-@do_it_right:
-	lda (addr_ptr), y
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp
 	iny
-	lda (addr_ptr), y
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp2
 	dey
-	tya
-
-	tax
-	lda math_cos_512_24, x
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF + 2), y
 	sta temp3
-	inx
-	lda math_cos_512_24, x
+	iny
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF + 2), y
 	sta temp4
-
-	
 
 	; Apply to X
 	sum16 disc_state+DISC_XOFF, temp
@@ -113,12 +136,11 @@ do_spin:
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF		; Invert dy
 
-	; Put table index out of phase
-	lda disc_state + DISC_SPINNING_CYCLE_LENOFF
-
+	; put table index out of phase
+	lda disc_state + disc_spinning_cycle_lenoff
 	lsr a
 	clc
-	adc disc_state + DISC_SPINNING_CYCLE_POSOFF ; Pos += len/2
+	adc disc_state + disc_spinning_cycle_posoff ; pos += len/2
 
 @do_not_reduce_pos:
 	sta disc_state + DISC_SPINNING_CYCLE_POSOFF
@@ -137,6 +159,13 @@ do_spin:
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF
+
+	; put table index out of phase
+	lda disc_state + disc_spinning_cycle_lenoff
+	lsr a
+	clc
+	adc disc_state + disc_spinning_cycle_posoff ; pos += len/2
+
 	; Fall-through to post_col
 
 @post_col:
