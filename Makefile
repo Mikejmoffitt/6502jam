@@ -34,13 +34,9 @@ sintab:
 	
 trig: sintab
 	tools/sintab sin 0.0 6.2831853 512 24 math_sin_512_24 > $(TRIGFILE)
-	tools/sintab cos 0.0 6.2831853 512 24 math_cos_512_24 >> $(TRIGFILE)
-	tools/sintab sin 0.0 6.2831853 512 48 math_sin_512_48 >> $(TRIGFILE)
-	tools/sintab cos 0.0 6.2831853 512 48 math_cos_512_48 >> $(TRIGFILE)
+	tools/sintab sin 0.0 6.2831853 512 64 math_sin_512_64 >> $(TRIGFILE)
 	tools/sintab sin 0.0 6.2831853 1024 24 math_sin_1024_24 >> $(TRIGFILE)
-	tools/sintab cos 0.0 6.2831853 1024 24 math_cos_1024_24 >> $(TRIGFILE)
-	tools/sintab sin 0.0 6.2831853 1024 48 math_sin_1024_48 >> $(TRIGFILE)
-	tools/sintab cos 0.0 6.2831853 1024 48 math_cos_1024_48 >> $(TRIGFILE)
+	tools/sintab sin 0.0 6.2831853 1024 64 math_sin_1024_64 >> $(TRIGFILE)
 
 mednafen: $(EXECUTABLE)
 	mednafen ./$(EXECUTABLE)

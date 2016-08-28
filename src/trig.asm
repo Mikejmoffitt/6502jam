@@ -25,134 +25,72 @@ math_sin_512_24:
 	.word $FF00
 	.word $FF7C
 
-math_cos_512_24:
-.byte $18
+math_sin_512_64:
+.byte $40
+	.word $0000
+	.word $0032
+	.word $0063
+	.word $0094
+	.word $00C3
+	.word $00F1
+	.word $011C
+	.word $0144
+	.word $016A
+	.word $018B
+	.word $01A9
+	.word $01C3
+	.word $01D9
+	.word $01E9
+	.word $01F6
+	.word $01FD
 	.word $0200
-	.word $01EE
-	.word $01BB
+	.word $01FD
+	.word $01F6
+	.word $01E9
+	.word $01D9
+	.word $01C3
+	.word $01A9
+	.word $018B
 	.word $016A
-	.word $00FF
-	.word $0084
+	.word $0144
+	.word $011C
+	.word $00F1
+	.word $00C3
+	.word $0094
+	.word $0063
+	.word $0032
 	.word $0000
-	.word $FF7C
-	.word $FF01
+	.word $FFCE
+	.word $FF9D
+	.word $FF6C
+	.word $FF3D
+	.word $FF0F
+	.word $FEE4
+	.word $FEBC
 	.word $FE96
-	.word $FE45
-	.word $FE12
+	.word $FE75
+	.word $FE57
+	.word $FE3D
+	.word $FE27
+	.word $FE17
+	.word $FE0A
+	.word $FE03
 	.word $FE00
-	.word $FE12
-	.word $FE45
-	.word $FE96
-	.word $FF00
-	.word $FF7C
-	.word $0000
-	.word $0084
-	.word $00FF
-	.word $016A
-	.word $01BB
-	.word $01EE
-
-math_sin_512_48:
-.byte $30
-	.word $0000
-	.word $0042
-	.word $0084
-	.word $00C3
-	.word $0100
-	.word $0137
-	.word $016A
-	.word $0196
-	.word $01BB
-	.word $01D9
-	.word $01EE
-	.word $01FB
-	.word $0200
-	.word $01FB
-	.word $01EE
-	.word $01D9
-	.word $01BB
-	.word $0196
-	.word $016A
-	.word $0137
-	.word $0100
-	.word $00C3
-	.word $0084
-	.word $0042
-	.word $0000
-	.word $FFBE
-	.word $FF7C
-	.word $FF3D
-	.word $FF01
-	.word $FEC9
-	.word $FE96
-	.word $FE6A
-	.word $FE45
+	.word $FE03
+	.word $FE0A
+	.word $FE17
 	.word $FE27
-	.word $FE12
-	.word $FE05
-	.word $FE00
-	.word $FE05
-	.word $FE12
-	.word $FE27
-	.word $FE45
-	.word $FE6A
+	.word $FE3D
+	.word $FE57
+	.word $FE75
 	.word $FE96
-	.word $FEC9
-	.word $FF01
+	.word $FEBC
+	.word $FEE4
+	.word $FF0F
 	.word $FF3D
-	.word $FF7C
-	.word $FFBE
-
-math_cos_512_48:
-.byte $30
-	.word $0200
-	.word $01FB
-	.word $01EE
-	.word $01D9
-	.word $01BB
-	.word $0196
-	.word $016A
-	.word $0137
-	.word $0100
-	.word $00C3
-	.word $0084
-	.word $0042
-	.word $0000
-	.word $FFBE
-	.word $FF7C
-	.word $FF3D
-	.word $FF01
-	.word $FEC9
-	.word $FE96
-	.word $FE6A
-	.word $FE45
-	.word $FE27
-	.word $FE12
-	.word $FE05
-	.word $FE00
-	.word $FE05
-	.word $FE12
-	.word $FE27
-	.word $FE45
-	.word $FE6A
-	.word $FE96
-	.word $FEC9
-	.word $FF00
-	.word $FF3D
-	.word $FF7C
-	.word $FFBE
-	.word $0000
-	.word $0042
-	.word $0084
-	.word $00C3
-	.word $0100
-	.word $0137
-	.word $016A
-	.word $0196
-	.word $01BB
-	.word $01D9
-	.word $01EE
-	.word $01FB
+	.word $FF6C
+	.word $FF9D
+	.word $FFCE
 
 math_sin_1024_24:
 .byte $18
@@ -181,132 +119,70 @@ math_sin_1024_24:
 	.word $FE00
 	.word $FEF7
 
-math_cos_1024_24:
-.byte $18
+math_sin_1024_64:
+.byte $40
+	.word $0000
+	.word $0064
+	.word $00C7
+	.word $0129
+	.word $0187
+	.word $01E2
+	.word $0238
+	.word $0289
+	.word $02D4
+	.word $0317
+	.word $0353
+	.word $0387
+	.word $03B2
+	.word $03D3
+	.word $03EC
+	.word $03FB
 	.word $0400
-	.word $03DD
-	.word $0376
+	.word $03FB
+	.word $03EC
+	.word $03D3
+	.word $03B2
+	.word $0387
+	.word $0353
+	.word $0317
 	.word $02D4
-	.word $01FF
-	.word $0109
+	.word $0289
+	.word $0238
+	.word $01E2
+	.word $0187
+	.word $0129
+	.word $00C7
+	.word $0064
 	.word $0000
-	.word $FEF7
-	.word $FE01
+	.word $FF9C
+	.word $FF39
+	.word $FED7
+	.word $FE79
+	.word $FE1E
+	.word $FDC8
+	.word $FD77
 	.word $FD2C
-	.word $FC8A
-	.word $FC23
+	.word $FCE9
+	.word $FCAD
+	.word $FC79
+	.word $FC4E
+	.word $FC2D
+	.word $FC14
+	.word $FC05
 	.word $FC00
-	.word $FC23
-	.word $FC8A
-	.word $FD2C
-	.word $FE00
-	.word $FEF7
-	.word $0000
-	.word $0109
-	.word $01FF
-	.word $02D4
-	.word $0376
-	.word $03DD
-
-math_sin_1024_48:
-.byte $30
-	.word $0000
-	.word $0085
-	.word $0109
-	.word $0187
-	.word $0200
-	.word $026F
-	.word $02D4
-	.word $032C
-	.word $0376
-	.word $03B2
-	.word $03DD
-	.word $03F7
-	.word $0400
-	.word $03F7
-	.word $03DD
-	.word $03B2
-	.word $0376
-	.word $032C
-	.word $02D4
-	.word $026F
-	.word $0200
-	.word $0187
-	.word $0109
-	.word $0085
-	.word $0000
-	.word $FF7B
-	.word $FEF7
-	.word $FE79
-	.word $FE01
-	.word $FD91
-	.word $FD2C
-	.word $FCD4
-	.word $FC8A
+	.word $FC05
+	.word $FC14
+	.word $FC2D
 	.word $FC4E
-	.word $FC23
-	.word $FC09
-	.word $FC00
-	.word $FC09
-	.word $FC23
-	.word $FC4E
-	.word $FC8A
-	.word $FCD4
+	.word $FC79
+	.word $FCAD
+	.word $FCE9
 	.word $FD2C
-	.word $FD91
-	.word $FE01
+	.word $FD77
+	.word $FDC8
+	.word $FE1E
 	.word $FE79
-	.word $FEF7
-	.word $FF7B
-
-math_cos_1024_48:
-.byte $30
-	.word $0400
-	.word $03F7
-	.word $03DD
-	.word $03B2
-	.word $0376
-	.word $032C
-	.word $02D4
-	.word $026F
-	.word $0200
-	.word $0187
-	.word $0109
-	.word $0085
-	.word $0000
-	.word $FF7B
-	.word $FEF7
-	.word $FE79
-	.word $FE01
-	.word $FD91
-	.word $FD2C
-	.word $FCD4
-	.word $FC8A
-	.word $FC4E
-	.word $FC23
-	.word $FC09
-	.word $FC00
-	.word $FC09
-	.word $FC23
-	.word $FC4E
-	.word $FC8A
-	.word $FCD4
-	.word $FD2C
-	.word $FD91
-	.word $FE00
-	.word $FE79
-	.word $FEF7
-	.word $FF7B
-	.word $0000
-	.word $0085
-	.word $0109
-	.word $0187
-	.word $0200
-	.word $026F
-	.word $02D4
-	.word $032C
-	.word $0376
-	.word $03B2
-	.word $03DD
-	.word $03F7
+	.word $FED7
+	.word $FF39
+	.word $FF9C
 

@@ -41,6 +41,8 @@ DISC_SPINNING_CYCLE_POSOFF = $14 ; Position in spinning lookup table
 DISC_SPINNING_CYCLE_LENOFF = $15
 DISC_SPINNING_CYCLE_ADDROFF = $16
 DISC_SPINNING_CYCLE_DIROFF = $18 ; 0 = spinning right, 1 = spinning left
+DISC_SPINNING_CYCLE_WAIT_CNTOFF = $19
+DISC_SPINNING_CYCLE_WAIT_AMNTOFF = $1A
 
 .segment "BANKE"
 
@@ -48,67 +50,96 @@ disc_spin_fast:
 .include "trig.asm"
 
 do_spin:
-	lda math_sin_512_24
-	sta disc_state + DISC_SPINNING_CYCLE_LENOFF
-	; /debug
 
+	; TODO: An initialization should set up this pointer
+	lda #<math_sin_512_64
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF
+	lda #>math_sin_512_64
+	sta disc_state + DISC_SPINNING_CYCLE_ADDROFF + 1
+
+	; TODO: Also init in setup function
+	lda #$01
+	sta disc_state + DISC_SPINNING_CYCLE_WAIT_AMNTOFF
+
+
+	; Grab length from the top of the table
+	; TODO: This should be done in the table init
+	ldy #$00
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
+	sta disc_state + DISC_SPINNING_CYCLE_LENOFF
+	; Store 1/2th the length in temp5, which is 1/4 phase
+	clc
+	lsr a ; >> 1
+	sta temp5
+
+	; Calculate offset into index from (position * 2) + 1
 	lda disc_state + DISC_SPINNING_CYCLE_POSOFF
 	clc
-	asl a
+	asl a ; << 1
 	tay
-	iny ; Offset to remove the length
+	iny ; +1 offset is because the first byte is the length
 
-	lda #<math_sin_512_24
-	sta addr_ptr
-	lda #>math_sin_512_24
-	sta addr_ptr+1
-
-	jmp @do_it_right
-
-	; Load dx/dy pair for present index
-	lda math_sin_512_24, x
-	sta temp
-	inx
-	lda math_sin_512_24, x
-	sta temp2
-	dex
-	lda math_cos_512_24, x
-	sta temp3
-	inx
-	lda math_cos_512_24, x
-	sta temp4
-
-@do_it_right:
-	lda (addr_ptr), y
+; Load position deltas from sine table
+	; Y = table offset position
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp
 	iny
-	lda (addr_ptr), y
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp2
 	dey
 	tya
 
-	tax
-	lda math_cos_512_24, x
+	; Offset the table by (len/2) for cosine, to the right
+	; Remember the index is 2*len + 1, so len/2 is 1/4 phase
+	clc
+	adc temp5 ; (1/2) len
+	ldx disc_state + DISC_SPINNING_CYCLE_DIROFF
+	bne @post_rotate
+	; If the disc is rotating to the left, offset by 2 * (len/2) extra
+	clc
+	adc temp5
+	clc
+	adc temp5
+
+@post_rotate:
+
+	sec
+	sbc #$01
+	lsr a
+
+	; Check for sine table overflow
+	cmp disc_state + DISC_SPINNING_CYCLE_LENOFF
+	bcc @no_idx_overflow
+	sec
+	sbc disc_state + DISC_SPINNING_CYCLE_LENOFF
+
+@no_idx_overflow:
+
+	clc
+	asl a
+	adc #$01
+
+	; Pull offset sine table for cos or -cos
+	tay
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp3
-	inx
-	lda math_cos_512_24, x
+	iny
+	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta temp4
 
-	
-
-	; Apply to X
+	; Apply to X position
 	sum16 disc_state+DISC_XOFF, temp
-	
-	; And Y
+
+	; And Y position
 	sum16 disc_state+DISC_YOFF, temp3
 
-	; Did we just collide with a wall?	
+	; Did we just collide with a wall?
 	; Top
 	lda playfield_top
 	clc
 	adc #(DISC_H/2)
 	cmp disc_state + DISC_YOFF+1
-	bcc @post_col				; No collision, get out of here. 
+	bcc @post_col				; No collision, get out of here.
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF		; Invert dy
@@ -141,6 +172,19 @@ do_spin:
 
 @post_col:
 
+	; Check wait state counter
+	lda disc_state + DISC_SPINNING_CYCLE_WAIT_CNTOFF
+	beq @no_wait_state
+	
+	; Decrement wait state counter, don't increment position counter
+	dec disc_state + DISC_SPINNING_CYCLE_WAIT_CNTOFF
+	rts
+
+@no_wait_state:
+
+	; Reset wait state counter
+	lda disc_state + DISC_SPINNING_CYCLE_WAIT_AMNTOFF
+	sta disc_state + DISC_SPINNING_CYCLE_WAIT_CNTOFF
 	; Increment spin table pointer
 	lda disc_state + DISC_SPINNING_CYCLE_POSOFF
 	clc
@@ -153,7 +197,7 @@ do_spin:
 @do_not_reset_cnt:
 	sta disc_state + DISC_SPINNING_CYCLE_POSOFF
 	rts
-	
+
 ; ============================
 ;  Initialize disc
 ; ============================
@@ -224,7 +268,7 @@ disc_move:
 	clc
 	adc #(DISC_H/2)
 	cmp disc_state + DISC_YOFF+1
-	bcc @h_check				; No collision, get out of here. 
+	bcc @h_check				; No collision, get out of here.
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF		; Invert dy
