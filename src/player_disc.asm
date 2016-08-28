@@ -191,7 +191,6 @@ player_do_normal_throw:
 	dey
 
 ; Determine if forward/back is held, store in temp3 and temp4
-	lda $5555
 	cpx #$00
 	bne @check_p2_dir
 	; Checking P1 fwd/back

@@ -239,6 +239,8 @@ player_counters:
 	bne :+
 ; Counter just now reached zero! Time to throw the disc.
 	jsr player_throw_disc ; <-- player_disc.asm
+	lda #$04
+	jsr disc_spin_right
 :
 
 	jsr player_run_hold_counter ; <-- player_disc.asm
@@ -595,6 +597,7 @@ player_input_dpad:
 	lda player_state + PLAYER_HOLDING_DISCOFF, x
 	beq @not_holding_disc
 ; Disc is held, check for curved throws
+; TODO: Check for curved throws
 	rts
 
 @not_holding_disc:

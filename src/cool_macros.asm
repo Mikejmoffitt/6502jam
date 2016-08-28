@@ -201,6 +201,22 @@ OAM_BASE	= $200
 	sta addr+1
 .endmacro
 
+; Multiply two 16-bit numbers num1 and num2
+.macro mul16 num1, num2, dest
+	sty temp7
+	ldy #$00
+	sty dest
+	sty dest2
+
+@a:
+	lsr a
+	bcc @b
+	pha
+	lda dest+1
+	clc
+	adc 
+.endmacro
+
 ; Negate a 16-bit address
 .macro neg16 addr
 	sec
