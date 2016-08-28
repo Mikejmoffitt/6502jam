@@ -70,8 +70,6 @@ disc_spin_left:
 ; Spin the disc.
 ; Desired table in lower nybble of A, wait-state set up in upper nybble
 disc_spin_right:
-
-	ldy $5555
 	ldx #$00
 	stx disc_state + DISC_SPINNING_CYCLE_DIROFF
 
@@ -82,6 +80,11 @@ disc_spin_init:
 	; Get wait-states
 	tax
 	and #$F0
+	; TODO: Carry?
+	lsr a
+	lsr a
+	lsr a
+	lsr a
 	sta disc_state + DISC_SPINNING_CYCLE_WAIT_AMNTOFF
 
 	; Get desired table
@@ -91,10 +94,7 @@ disc_spin_init:
 	rts
 
 @nonzero:
-
-	; Offset index by 1 - zero means "not spinning"
-	sec
-	sbc #$01
+	; Calcluate index in trig table
 	clc
 	asl a
 	tax

@@ -239,8 +239,8 @@ player_counters:
 	bne :+
 ; Counter just now reached zero! Time to throw the disc.
 	jsr player_throw_disc ; <-- player_disc.asm
-	lda #$04
-	jsr disc_spin_right
+	lda #$01
+	jsr disc_spin_left
 :
 
 	jsr player_run_hold_counter ; <-- player_disc.asm
