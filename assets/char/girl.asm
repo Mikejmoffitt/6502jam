@@ -343,23 +343,6 @@ girl_anims:
 	.addr	girl_anim_slide_up
 	.addr	girl_anim_slide_down
 
-
-.macro throw_stats_macro arg
-	.word (1000 * arg) / 128;		; dx; Fwd
-	.word 0;				; dy; Fwd (nonzero would be nonsensical)
-
-	.word (800 * arg) / 128;		; dx; Dn-Fwd
-	.word (400 * arg) / 128;		; dy; Dn-Fwd
-
-	.word (600 * arg) / 128;		; dx; Dn
-	.word (600 * arg) / 128;		; dy; Dn
-
-	.word (400 * arg) / 128;		; dx; Dn-Back
-	.word (800 * arg) / 128;		; dy; Dn-Back
-
-.endmacro
-
-
 ; Fix16 multiplication is really just 16-bit multiplication, but with >> 8 at the end.
 ; In other words, hibyte <= hihibyte (17-24), lowbyte <= hibyte requires 24 bits.
 ; A cheaper solution can be to shift right 4 times both operands, truncating the lower 4 bits of precision,
@@ -388,11 +371,10 @@ character_girl:
 	.addr	girl_anims	; Pointer to animation table
 
 ; Throw stats
-	throw_stats_macro 202	; Stats for a strong throw
-	throw_stats_macro 128	; Stats for a normal throw
-	throw_stats_macro 56	; Stats for a weak throw
-
-.delmacro throw_stats_macro
+	.byte 15, 0		; dx, dy: Fwd
+	.byte 11, 3		; dx, dy: Dn-Fwd
+	.byte 7, 5		; dx, dy: Dn
+	.byte 4, 7		; dx, dy: Dn-Back
 
 ; Character graphics
 .segment "BANK2"

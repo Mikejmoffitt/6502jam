@@ -12,29 +12,11 @@ FENCE_SPR_Y = $CF
 
 .include "disc.asm"
 .include "player.asm"
-
-
 .include "utils.asm"
-
 
 .segment "BANKF"
 
-; Turn off rendering
-.macro ppu_disable
-	lda #$00		
-	sta PPUMASK			; Disable rendering
-.endmacro
-
-; Turn on rendering
-.macro ppu_enable
-	lda ppumask_config
-	sta PPUMASK			; Put back PPU rendering state to what it was before
-
-	lda ppuctrl_config
-	ora xscroll+1			; Bring in X scroll coarse bit
-	ora yscroll+1			; Y scroll coarse bit
-	sta PPUCTRL			; Re-enable NMI
-.endmacro
+.include "tables.asm"
 
 ; ============================
 ;	  NMI ISR

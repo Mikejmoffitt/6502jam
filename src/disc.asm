@@ -24,6 +24,8 @@ DISC_CURVE_NONE = $00
 DISC_CURVE_UP = $01
 DISC_CURVE_DOWN = $02
 
+; The disc pops up in the air for about 80 frames
+
 ; Misc gameplay
 DISC_ANIMOFF = $0c	; Animation counter
 DISC_GRAV_ENOFF = $0d	; If nonzero, dz += gravity

@@ -110,3 +110,47 @@ spr_init:
 	cpx #$00
 	bne @clroam_loop
 	rts
+
+; Multiply A by temp7
+; Result in A (high) and temp5 (low)
+mul_func:
+	cmp temp7
+	bcs :+
+
+	ldx temp7		; if dest < temp7
+	sta temp7
+	sec
+	txa
+:
+	tax
+	sbc temp7
+	lsr
+	tay
+	txa
+	clc
+	adc temp7
+	ror
+	tax
+	lda sqrlo, x
+	bcc :+
+
+	sbc sqrlo, y	; odd
+	sta temp5
+	lda sqrhi, x
+	sbc sqrhi, y
+	tax
+	clc
+	lda temp7
+	adc temp5
+	sta temp5
+	txa
+	adc #0
+	rts
+
+:
+	sec		; even
+	sbc sqrlo, y
+	sta temp5
+	lda sqrhi, x
+	sbc sqrhi, y
+	rts

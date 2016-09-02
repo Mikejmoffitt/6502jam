@@ -271,6 +271,9 @@ player_do_normal_throw:
 	clc
 	adc #STATS_THROWS
 
+	; TODO: Remove all the above
+	lda #STATS_THROWS
+
 	; Back up offset we've built, we're going to mangle A to check the
 	; button / pad state
 	sta temp5
@@ -289,7 +292,7 @@ player_do_normal_throw:
 @down_held:
 	lda temp5
 	clc
-	adc #$04
+	adc #$02
 	sta temp5
 ; Are we holding forward?
 	lda temp3
@@ -301,7 +304,7 @@ player_do_normal_throw:
 	; If not, just jump to the down-only offset (8)
 	lda temp5
 	clc
-	adc #$04
+	adc #$02
 	sta temp5
 	jmp @load_disc_vec
 
@@ -309,7 +312,7 @@ player_do_normal_throw:
 @holding_back:
 	lda temp5
 	clc
-	adc #$08
+	adc #$04
 	sta temp5
 	; Fall-through to @load_disc_vec
 
@@ -323,13 +326,31 @@ player_do_normal_throw:
 	sta disc_state + DISC_DXOFF
 	iny
 	lda (addr_ptr), y
-	sta disc_state + DISC_DXOFF + 1
-	iny
-	lda (addr_ptr), y
 	sta disc_state + DISC_DYOFF
-	iny
-	lda (addr_ptr), y
+
+	stx temp4
+
+	; Scale X
+	lda #96
+	sta temp7
+	lda disc_state + DISC_DXOFF
+	jsr mul_func
+
+	sta disc_state + DISC_DXOFF + 1
+	lda temp5
+	sta disc_state + DISC_DXOFF
+
+	; Scale Y
+	lda #96
+	sta temp7
+	lda disc_state + DISC_DYOFF
+	jsr mul_func
+
 	sta disc_state + DISC_DYOFF + 1
+	lda temp5
+	sta disc_state + DISC_DYOFF
+	
+	ldx temp4
 
 ; Is the player holding up?
 	lda temp

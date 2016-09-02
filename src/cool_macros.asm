@@ -1,25 +1,42 @@
 ; Some potentially useful macros for NES stuff
-PPUCTRL	 = $2000
-PPUMASK	 = $2001
-PPUSTATUS       = $2002
-OAMADDR	 = $2003
-OAMDATA	 = $2004
-PPUSCROLL       = $2005
-PPUADDR	 = $2006
-PPUDATA	 = $2007
-OAMDMA	  = $4014
-DMCFREQ	 = $4010
+PPUCTRL			= $2000
+PPUMASK			= $2001
+PPUSTATUS		= $2002
+OAMADDR			= $2003
+OAMDATA			= $2004
+PPUSCROLL		= $2005
+PPUADDR			= $2006
+PPUDATA			= $2007
+OAMDMA			= $4014
+DMCFREQ			= $4010
 
-BUTTON_A	= %10000000
-BUTTON_B	= %01000000
-BUTTON_SEL      = %00100000
-BUTTON_START    = %00010000
-BUTTON_UP       = %00001000
-BUTTON_DOWN     = %00000100
-BUTTON_LEFT     = %00000010
-BUTTON_RIGHT    = %00000001
+BUTTON_A		= %10000000
+BUTTON_B		= %01000000
+BUTTON_SEL		= %00100000
+BUTTON_START		= %00010000
+BUTTON_UP		= %00001000
+BUTTON_DOWN		= %00000100
+BUTTON_LEFT		= %00000010
+BUTTON_RIGHT		= %00000001
 
 OAM_BASE	= $200
+
+; Turn off rendering
+.macro ppu_disable
+	lda #$00		
+	sta PPUMASK			; Disable rendering
+.endmacro
+
+; Turn on rendering
+.macro ppu_enable
+	lda ppumask_config
+	sta PPUMASK			; Put back PPU rendering state to what it was before
+
+	lda ppuctrl_config
+	ora xscroll+1			; Bring in X scroll coarse bit
+	ora yscroll+1			; Y scroll coarse bit
+	sta PPUCTRL			; Re-enable NMI
+.endmacro
 
 ; OAM Access macros
 .macro write_oam_y arg
@@ -201,22 +218,6 @@ OAM_BASE	= $200
 	sta addr+1
 .endmacro
 
-; Multiply two 16-bit numbers num1 and num2
-.macro mul16 num1, num2, dest
-	sty temp7
-	ldy #$00
-	sty dest
-	sty dest2
-
-@a:
-	lsr a
-	bcc @b
-	pha
-	lda dest+1
-	clc
-	adc 
-.endmacro
-
 ; Negate a 16-bit address
 .macro neg16 addr
 	sec
@@ -380,3 +381,74 @@ OAM_BASE	= $200
 	inx
 	bne :-
 .endmacro
+
+; Thanks to tepples for 16/8 = 16r8 divider routine
+; Remainder goes in A, X is clobbered to zero
+.macro div16 dividend, divisor
+	ldx #16
+	lda #0
+:
+	asl dividend
+	rol dividend+1
+	rol a
+	cmp divisor
+	bcc :+
+	sbc divisor
+	inc dividend
+:
+	dex
+	bne :--
+.endmacro
+
+; Thanks for litwr (Vladimir Lidovski) for this fast 8x8 multiply
+; Multiply "dest" * "fac", store result in dest.w
+; "rlo" is temp storage, ideally zero page
+.macro mul16 fac, dest, rlo
+	lda dest
+
+	cmp fac
+	bcs :+
+
+	ldx fac		; if dest < fac
+	sta fac
+	sec
+	txa
+:
+	tax
+	sbc fac
+	lsr
+	tay
+	txa
+	clc
+	adc fac
+	ror
+	tax
+	lda sqrlo, x
+	bcc :+
+
+	sbc sqrlo, y	; odd
+	sta rlo
+	lda sqrhi, x
+	sbc sqrhi, y
+	tax
+	clc
+	lda fac
+	adc rlo
+	sta rlo
+	txa
+	adc #0
+	rts
+
+:
+	sec		; even
+	sbc sqrlo, y
+	sta rlo
+	lda sqrhi, x
+	sbc sqrhi, y
+
+	; Put result in dest
+	sta dest+1
+	lda rlo
+	sta dest
+.endmacro
+
