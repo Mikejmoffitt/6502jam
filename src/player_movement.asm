@@ -597,7 +597,7 @@ player_input_dpad:
 	lda player_state + PLAYER_HOLDING_DISCOFF, x
 	beq @not_holding_disc
 ; Disc is held, check for curved throws
-; TODO: Check for curved throws
+	jsr player_detect_rotation
 	rts
 
 @not_holding_disc:

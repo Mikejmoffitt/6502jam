@@ -47,6 +47,7 @@ PLAYER_SLIDE_DELAY = $03
 PLAYER_THROW_DELAY = $0D	; Matches Windjammers
 PLAYER_AUTOTHROW_DELAY = $40	; Matches Windjammers
 PLAYER_CHARGE_THRESH = $20
+ROTATE_COOLDOWN_DELAY = $07
 
 PLAYER_THROW_STRONG_CUTOFF = 07
 PLAYER_THROW_NORMAL_CUTOFF = 34
@@ -54,6 +55,19 @@ PLAYER_THROW_NORMAL_CUTOFF = 34
 THROW_STRONG_OFFSET = STATS_THROW_SIZE*0
 THROW_NORMAL_OFFSET = STATS_THROW_SIZE*1
 THROW_WEAK_OFFSET = STATS_THROW_SIZE*2
+
+; D-pad states
+DPAD_NONE	= $00
+DPAD_UP 	= BUTTON_UP
+DPAD_UPLEFT 	= (BUTTON_UP | BUTTON_LEFT)
+DPAD_LEFT 	= BUTTON_LEFT
+DPAD_DOWNLEFT 	= (BUTTON_DOWN | BUTTON_LEFT)
+DPAD_DOWN 	= BUTTON_DOWN
+DPAD_DOWNRIGHT 	= (BUTTON_DOWN | BUTTON_RIGHT)
+DPAD_RIGHT 	= BUTTON_RIGHT
+DPAD_UPRIGHT 	= (BUTTON_DOWN | BUTTON_LEFT)
+DPAD_MASK	= $0F
+
 
 ; ------------------------ Struct Offsets -----------------------
 
@@ -106,6 +120,12 @@ PLAYER_HOLDING_DISCOFF = $24		; When nonzero, player is holding the disc.
 PLAYER_THROW_TYPEOFF = $25
 
 PLAYER_HOLD_CNTOFF = $26		; How long has the player been holding the disc?
+
+PLAYER_ROTATE_STATEOFF = $27		; Current detected D-pad state for the
+					; player to transition from.
+PLAYER_ROTATE_COOLDOWNOFF = $28		; Timeout to accept state transition
+PLAYER_ROTATING_LEFTOFF = $29		; When nonzero, enable ccw rotation
+PLAYER_ROTATING_RIGHTOFF = $2A		; When nonzero, enable cw rotation
 
 ; Basic player in-game logic
 .segment "BANKE"

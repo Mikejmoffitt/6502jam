@@ -349,7 +349,7 @@ player_do_normal_throw:
 	sta disc_state + DISC_DYOFF + 1
 	lda temp5
 	sta disc_state + DISC_DYOFF
-	
+
 	ldx temp4
 
 ; Is the player holding up?
@@ -450,4 +450,147 @@ player_throw_disc:
 	; Record player as the last one to have thrown the disc
 	stx disc_state + DISC_LAST_PLAYEROFF
 
+	rts
+
+; Rotation code helper macro
+.macro rot_state_transition cur, new_left, new_right
+:
+	; Check for the current state "cur"
+	lda player_state + PLAYER_ROTATE_STATEOFF, x
+	cmp cur
+	bne :+++
+
+	; Check for transitions from cur
+	lda temp
+	cmp new_left
+	bne :+
+	; Newleft was hit, mark rotating left
+	jsr player_rotate_mark_left
+	rts
+:
+	cmp new_right
+	bne :+
+	; Newright was hit, mark rotating right
+	jsr player_rotate_mark_right
+	rts
+:
+	; Neither was hit, mark not rotating.
+	jsr player_rotate_mark_none
+	rts
+.endmacro
+
+; ============================================================================
+; Detect whether or not the player is rotating the D-Pad.
+; Pre:
+;	X = player struct offset
+player_detect_rotation:
+	lda $5555
+; Load pad and mask off non-directional buttons
+	cpx #$00
+	bne @use_p2_pad
+	lda pad_1
+	and #DPAD_MASK
+	sta temp
+	jmp @post_pad
+@use_p2_pad:
+	lda pad_2
+	and #DPAD_MASK
+	sta temp
+@post_pad:
+	; Temp contains the new state. Time to check for state transitions.
+
+	; Is our new state different than the last one?
+	cmp player_state + PLAYER_ROTATE_STATEOFF, x
+	bne @new_state
+	; If not, just go to decrement the cooldown
+	jmp @post_detect
+
+@new_state:
+	; Load previous state, to determine valid new states
+	lda player_state + PLAYER_ROTATE_STATEOFF, x
+	; Implicit: cmp DPAD_NONE ; DPAD_NONE is zero
+	bne @chk_directions
+
+	; No prior state, so capture the new one
+	lda temp
+	sta player_state + PLAYER_ROTATE_STATEOFF, x
+	lda #ROTATE_COOLDOWN_DELAY
+	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	rts
+	; Dummy branch to squash a warning about an unreferenced unnamed label
+	; which comes from the rot_state_transition macro
+	bne :+
+
+@chk_directions:
+	rot_state_transition #DPAD_UP, #DPAD_UPLEFT, #DPAD_UPRIGHT
+	rot_state_transition #DPAD_UPLEFT, #DPAD_LEFT, #DPAD_UP
+	rot_state_transition #DPAD_LEFT, #DPAD_DOWNLEFT, #DPAD_UPLEFT
+	rot_state_transition #DPAD_DOWNLEFT, #DPAD_DOWN, #DPAD_LEFT
+	rot_state_transition #DPAD_DOWN, #DPAD_DOWNRIGHT, #DPAD_DOWNLEFT
+	rot_state_transition #DPAD_DOWNRIGHT, #DPAD_RIGHT, #DPAD_DOWN
+	rot_state_transition #DPAD_RIGHT, #DPAD_UPRIGHT, #DPAD_DOWNRIGHT
+	rot_state_transition #DPAD_UPRIGHT, #DPAD_RIGHT, #DPAD_UP
+:
+
+@post_detect:
+	; No new direction, just decrement the cooldown if we have it
+	lda player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	beq @no_cooldown_dec
+	sec
+	sbc #$01
+	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+@no_cooldown_dec:
+
+; If cooldown > 0 and state is new:
+;	If new direction is an adjacent one:
+;		Reset cooldown
+;		Set rotating left or right
+;		Set state to new direction
+;	else if new direction, but not adjacent:
+;		Reset cooldown
+;		Clear rotating flags
+;	else:
+;		Decrement cooldown
+; else:
+;	if new direction is non-none:
+;		Reset cooldown
+;		Set state to new direction
+;		Clear rotating flags
+
+	rts
+
+; D-pad rotation support function stuff
+player_rotate_mark_right:
+	; If cooldown > 0, mark left rotation flag
+	lda player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	beq player_rotate_mark_base
+	lda #$FF
+	sta player_state + PLAYER_ROTATING_RIGHTOFF, x
+	jmp player_rotate_mark_base
+
+player_rotate_mark_left:
+	; If cooldown > 0, mark left rotation flag
+	lda player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	beq player_rotate_mark_base
+	lda #$FF
+	sta player_state + PLAYER_ROTATING_LEFTOFF, x
+
+player_rotate_mark_base:
+	; Reset the cooldown
+	lda #ROTATE_COOLDOWN_DELAY
+	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	; Capture state
+	lda temp
+	sta player_state + PLAYER_ROTATE_STATEOFF, x
+	rts
+
+player_rotate_mark_none:
+	; Not a valid state transition. Clear cooldown, capture direction,
+	; and clear the rotation flags.
+	lda temp
+	sta player_state + PLAYER_ROTATE_STATEOFF, x
+	lda #$00
+	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
+	sta player_state + PLAYER_ROTATING_LEFTOFF, x
+	sta player_state + PLAYER_ROTATING_RIGHTOFF, x
 	rts

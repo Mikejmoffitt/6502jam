@@ -23,7 +23,7 @@ build: $(EXECUTABLE)
 all: $(EXECUTABLE)
 
 clean:
-	rm -f jam.nes listing.txt main.o map.txt jam.nes.deb jam.cdl
+	rm -f jam.nes listing.txt main.o map.txt jam.nes.deb jam.cdl labels.txt
 
 $(EXECUTABLE): trig
 	$(AS) $(SRCDIR)/$(TOPLEVEL) $(ASFLAGS) -I $(SRCDIR) -l $(LISTNAME) -o $(OBJNAME)
