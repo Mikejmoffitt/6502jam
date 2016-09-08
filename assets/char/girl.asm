@@ -348,12 +348,6 @@ girl_anims:
 ; A cheaper solution can be to shift right 4 times both operands, truncating the lower 4 bits of precision,
 ; OR to truncate the lower 8 bits and then perform no shifting. Both solutions degrade precision.
 
-; Physics constants
-;	fix16: Walk speed (Orthagonal)
-;	fix16: Walk speed (Diagonal); should be orthagonal * 0.707
-;	fix16: Dash strength
-;	fix16: Dash decel magnitude
-
 	.byte $ED
 	.byte $80, $12
 

@@ -207,7 +207,7 @@ player_set_anim_num:
 	lda (addr_ptr), y			; Get lobyte
 	sta player_state + PLAYER_ANIM_ADDROFF, x
 	sta temp
-	iny		
+	iny
 	lda (addr_ptr), y			; Get hibyte
 	sta player_state + PLAYER_ANIM_ADDROFF + 1, x
 	sta temp2
@@ -244,7 +244,7 @@ player_choose_mapping:
 	add16 temp, #$02		; addr_ptr = script's first mapping
 
 	lda player_state + PLAYER_ANIM_FRAMEOFF, x ; Get current frame #
-	asl a				
+	asl a
 	asl a				; A = index into script for frame
 					; A = current frame * 4
 	sta temp3
@@ -254,13 +254,13 @@ player_choose_mapping:
 	; Temp has the address of the animation mapping now.
 
 	ldy #$00
-	lda (temp), y			
+	lda (temp), y
 	sta addr_ptr			; addr_ptr = lowaddr of mapping
 	iny
 	lda (temp), y
 	sta addr_ptr+1			; addr_ptr+1 = hiaddr of mapping
 
-	;addr_ptr now contains the mapping address. 
+	;addr_ptr now contains the mapping address.
 
 	rts
 
@@ -274,17 +274,17 @@ player_choose_mapping:
 ;	  length, it will have reset to zero and incremented ANIM_FRAMEOFF.
 ;	ANIM_FRAMEOFF will reset to zero when it has reached the script length.
 player_animate:
-	
+
 	; Get address of script into temp
 	lda player_state + PLAYER_ANIM_ADDROFF, x
 	sta temp
 	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
 	sta temp2
 
-	add16 temp, #$04		; Point at the duration marker		
+	add16 temp, #$04		; Point at the duration marker
 
 	lda player_state + PLAYER_ANIM_FRAMEOFF, x ; Get current frame #
-	asl a				
+	asl a
 	asl a				; A = index into script for frame
 	sta temp3
 	add16 temp, temp3
@@ -323,7 +323,7 @@ player_animate:
 	lda player_state + PLAYER_ANIM_ADDROFF + 1, x
 	sta temp2
 
-	add16 temp, #$01		; Point at the loop point	
+	add16 temp, #$01		; Point at the loop point
 
 	ldy #$00
 	lda (temp), y
@@ -331,8 +331,7 @@ player_animate:
 	rts
 
 
-
-; Based on current frame %2, select either player 1 or player 2 to receive a 
+; Based on current frame %2, select either player 1 or player 2 to receive a
 ; higher sprite index. This is to resolve flicker should it become a problem.
 ; Preconditions:
 ;	-
@@ -437,7 +436,6 @@ player_draw:
 
 	sta OAM_BASE, y
 	iny				; Y = OAM X position
-
 
 	lda player_state + PLAYER_DIRXOFF, x
 	beq @noflipx

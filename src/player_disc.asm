@@ -25,6 +25,10 @@ player_run_hold_counter:
 	lda player_state + PLAYER_HOLD_CNTOFF, x
 ; Have we reached the autothrow threshhold?
 	cmp #PLAYER_AUTOTHROW_DELAY
+
+	; TODO: Remove debug disable line here:
+	rts
+
 	beq :+
 ; If not, get out of here
 	rts
@@ -483,8 +487,9 @@ player_throw_disc:
 ; Detect whether or not the player is rotating the D-Pad.
 ; Pre:
 ;	X = player struct offset
+; Post:
+;	PLAYER_ROTATING_RIGHTOFF or PLAYER_ROTATING_LEFTOFF are non-zero
 player_detect_rotation:
-	lda $5555
 ; Load pad and mask off non-directional buttons
 	cpx #$00
 	bne @use_p2_pad
@@ -503,6 +508,7 @@ player_detect_rotation:
 	cmp player_state + PLAYER_ROTATE_STATEOFF, x
 	bne @new_state
 	; If not, just go to decrement the cooldown
+
 	jmp @post_detect
 
 @new_state:
@@ -517,19 +523,20 @@ player_detect_rotation:
 	lda #ROTATE_COOLDOWN_DELAY
 	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
 	rts
+
 	; Dummy branch to squash a warning about an unreferenced unnamed label
 	; which comes from the rot_state_transition macro
 	bne :+
 
 @chk_directions:
-	rot_state_transition #DPAD_UP, #DPAD_UPLEFT, #DPAD_UPRIGHT
-	rot_state_transition #DPAD_UPLEFT, #DPAD_LEFT, #DPAD_UP
-	rot_state_transition #DPAD_LEFT, #DPAD_DOWNLEFT, #DPAD_UPLEFT
-	rot_state_transition #DPAD_DOWNLEFT, #DPAD_DOWN, #DPAD_LEFT
-	rot_state_transition #DPAD_DOWN, #DPAD_DOWNRIGHT, #DPAD_DOWNLEFT
-	rot_state_transition #DPAD_DOWNRIGHT, #DPAD_RIGHT, #DPAD_DOWN
-	rot_state_transition #DPAD_RIGHT, #DPAD_UPRIGHT, #DPAD_DOWNRIGHT
-	rot_state_transition #DPAD_UPRIGHT, #DPAD_RIGHT, #DPAD_UP
+	rot_state_transition 	#DPAD_UP,		#DPAD_UPLEFT,		#DPAD_UPRIGHT
+	rot_state_transition 	#DPAD_UPLEFT,		#DPAD_LEFT,		#DPAD_UP
+	rot_state_transition 	#DPAD_LEFT,		#DPAD_DOWNLEFT,		#DPAD_UPLEFT
+	rot_state_transition 	#DPAD_DOWNLEFT,		#DPAD_DOWN,		#DPAD_LEFT
+	rot_state_transition 	#DPAD_DOWN,		#DPAD_DOWNRIGHT,	#DPAD_DOWNLEFT
+	rot_state_transition 	#DPAD_DOWNRIGHT,	#DPAD_RIGHT,		#DPAD_DOWN
+	rot_state_transition 	#DPAD_RIGHT,		#DPAD_UPRIGHT,		#DPAD_DOWNRIGHT
+	rot_state_transition 	#DPAD_UPRIGHT,		#DPAD_UP,		#DPAD_RIGHT
 :
 
 @post_detect:
@@ -540,22 +547,6 @@ player_detect_rotation:
 	sbc #$01
 	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
 @no_cooldown_dec:
-
-; If cooldown > 0 and state is new:
-;	If new direction is an adjacent one:
-;		Reset cooldown
-;		Set rotating left or right
-;		Set state to new direction
-;	else if new direction, but not adjacent:
-;		Reset cooldown
-;		Clear rotating flags
-;	else:
-;		Decrement cooldown
-; else:
-;	if new direction is non-none:
-;		Reset cooldown
-;		Set state to new direction
-;		Clear rotating flags
 
 	rts
 
@@ -574,6 +565,7 @@ player_rotate_mark_left:
 	beq player_rotate_mark_base
 	lda #$FF
 	sta player_state + PLAYER_ROTATING_LEFTOFF, x
+	; Fall-through to player_rotate_mark_base
 
 player_rotate_mark_base:
 	; Reset the cooldown

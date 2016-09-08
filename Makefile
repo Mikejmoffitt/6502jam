@@ -1,4 +1,3 @@
-
 TOOL_CC := clang
 TOOL_LDF := -lm
 AS := ca65
