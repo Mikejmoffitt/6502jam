@@ -239,10 +239,23 @@ player_counters:
 	bne :+
 ; Counter just now reached zero! Time to throw the disc.
 	jsr player_throw_disc ; <-- player_disc.asm
-	;lda #$11
-	;jsr disc_spin_left
+; Was the player rotating the dpad?
+	lda player_state + PLAYER_ROTATING_RIGHTOFF, x
+	beq :+
+	lda #11
+	jsr disc_spin_right
+	jmp @post_spin
 :
+	lda player_state + PLAYER_ROTATING_LEFTOFF, x
+	beq :+
+	lda #$11
+	jsr disc_spin_left
+	jmp @post_spin
+:
+; No spinning; disable disc spinning entirely
+	jsr disc_stop_spinning
 
+@post_spin:
 	jsr player_run_hold_counter ; <-- player_disc.asm
 
 	rts
@@ -596,6 +609,11 @@ player_input_buttons:
 player_input_dpad:
 	lda player_state + PLAYER_HOLDING_DISCOFF, x
 	beq @not_holding_disc
+; Make sure we aren't about to do a throw
+	lda player_state + PLAYER_THROW_CNTOFF, x
+	beq @not_about_to_throw
+	rts
+@not_about_to_throw:
 ; Disc is held, check for curved throws
 	jsr player_detect_rotation
 	rts

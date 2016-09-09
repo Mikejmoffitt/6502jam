@@ -490,6 +490,9 @@ player_throw_disc:
 ; Post:
 ;	PLAYER_ROTATING_RIGHTOFF or PLAYER_ROTATING_LEFTOFF are non-zero
 player_detect_rotation:
+	lda ppumask_config
+	ora #%01100000
+	sta PPUMASK
 ; Load pad and mask off non-directional buttons
 	cpx #$00
 	bne @use_p2_pad
