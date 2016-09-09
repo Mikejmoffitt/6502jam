@@ -12,6 +12,10 @@ DISC_NOMINAL_Z = $0A
 DISC_SPR_NUM = 10
 DISC_SHADOW_SPR_NUM = 50
 
+DISC_CURVE_NONE = $00
+DISC_CURVE_UP = $01
+DISC_CURVE_DOWN = $02
+
 ; Physics variable struct offsets
 DISC_XOFF = $00
 DISC_YOFF = $02
@@ -19,11 +23,6 @@ DISC_ZOFF = $04
 DISC_DXOFF = $06
 DISC_DYOFF = $08
 DISC_DZOFF = $0a
-
-DISC_CURVE_NONE = $00
-DISC_CURVE_UP = $01
-DISC_CURVE_DOWN = $02
-
 ; The disc pops up in the air for about 80 frames
 
 ; Misc gameplay
@@ -32,9 +31,6 @@ DISC_GRAV_ENOFF = $0d	; If nonzero, dz += gravity
 DISC_HELDOFF = $0e	; If nonzero, hide disc and don't move it
 DISC_FLIPPINGOFF = $0f	; If nonzero, show flipping anim, have gravity
 DISC_LAST_PLAYEROFF = $10 ; offset of player who last touched the disc
-
-DISC_CURVINGOFF = $11   ; Offset for disc curve state
-DISC_CURVESTROFF = $12  ; Offset for disc curve intensity
 
 DISC_SPINNING_CYCLE_POSOFF = $13 ; Position in spinning lookup table
 DISC_SPINNING_CYCLE_LENOFF = $14
@@ -47,10 +43,27 @@ DISC_SPINNING_CYCLE_WAIT_AMNTOFF = $19
 .include "trig.asm"
 
 trig_index_table:
+	.addr math_sin_128_16
 	.addr math_sin_512_16
 	.addr math_sin_768_16
-	.addr math_sin_1024_16
 	.addr math_sin_1536_16
+
+; Puts the disc spin lookup 1/2 out of phase.
+disc_spin_invert_phase:	
+; Put table index out of phase
+	lda disc_state + DISC_SPINNING_CYCLE_LENOFF
+	lsr a
+	clc
+	adc disc_state + DISC_SPINNING_CYCLE_POSOFF ; Pos += len/2
+
+; Check for overflow within table
+	cmp disc_state + DISC_SPINNING_CYCLE_LENOFF
+	bcc @no_idx_overflow
+	sec
+	sbc disc_state + DISC_SPINNING_CYCLE_LENOFF
+
+@no_idx_overflow:
+	rts
 
 ; Clears out the disc spinning data.
 disc_stop_spinning:
@@ -74,6 +87,7 @@ disc_spin_left:
 disc_spin_right:
 	ldx #$00
 	stx disc_state + DISC_SPINNING_CYCLE_DIROFF
+	; Fall-through to disc_spin_init
 
 disc_spin_init:
 	; Clear out vars
@@ -110,6 +124,16 @@ disc_spin_init:
 	ldy #$00
 	lda (disc_state + DISC_SPINNING_CYCLE_ADDROFF), y
 	sta disc_state + DISC_SPINNING_CYCLE_LENOFF
+
+	; Did player two throw the disc?
+	lda disc_state + DISC_LAST_PLAYEROFF
+	beq @p1_throw
+
+	; If so, set the table index to len/2
+	lda disc_state + DISC_SPINNING_CYCLE_LENOFF
+	lsr a
+	sta disc_state + DISC_SPINNING_CYCLE_POSOFF
+@p1_throw:
 
 	rts
 

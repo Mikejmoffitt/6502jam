@@ -170,7 +170,7 @@ player_check_disc:
 
 ; ==========================================
 ; Helper function for player_throw_disc. Makes the player throw the disc
-; normally (not curved, not a lob)
+; normally (not a lob)
 ; Pre:
 ;	X is loaded with the player struct offset.
 ; Post:
@@ -334,8 +334,11 @@ player_do_normal_throw:
 
 	stx temp4
 
+	; TODO: Load scale coefficient based on how long the player has held
+	; the disc before pressing the A button.
+
 	; Scale X
-	lda #96
+	lda #32
 	sta temp7
 	lda disc_state + DISC_DXOFF
 	jsr mul_func
@@ -345,7 +348,7 @@ player_do_normal_throw:
 	sta disc_state + DISC_DXOFF
 
 	; Scale Y
-	lda #96
+	lda #32
 	sta temp7
 	lda disc_state + DISC_DYOFF
 	jsr mul_func
@@ -376,6 +379,38 @@ player_do_normal_throw:
 	rts
 
 ; ===========================================
+; Helper function for player_throw_disc. Adds spin to a normal throw if
+; appropriate. 
+; Preconditions:
+;	X is loaded with the player struct offset.
+; Postconditions:
+;	The disc's spin has been configured (or not).
+player_spin_throw_add:
+	; Preserve X
+	txa
+	pha
+
+	lda player_state + PLAYER_ROTATING_RIGHTOFF, x
+	beq :+
+	lda #$81
+	jsr disc_spin_right	; <-- disc.asm (BANKE)
+	jmp @done
+:
+	lda player_state + PLAYER_ROTATING_LEFTOFF, x
+	beq :+
+	lda #$81
+	jsr disc_spin_left	; <-- disc.asm (BANKE)
+	jmp @done
+:
+; No spinning; disable disc spinning entirely
+	jsr disc_stop_spinning
+@done:
+	; Restore X
+	pla
+	tax
+	rts
+
+; ===========================================
 ; Run when the player's disc throwing counter has expired.
 ; Preconditions:
 ;	X is loaded with the player struct offset.
@@ -401,6 +436,8 @@ player_throw_disc:
 	sta disc_state + DISC_DZOFF
 	sta disc_state + DISC_DZOFF + 1
 
+; Record player as the last one to have thrown the disc
+	stx disc_state + DISC_LAST_PLAYEROFF
 
 ; Check the throw type
 	lda player_state + PLAYER_THROW_TYPEOFF, x
@@ -409,6 +446,7 @@ player_throw_disc:
 ; Do a normal throw:
 
 	jsr player_do_normal_throw
+	jsr player_spin_throw_add
 
 	cpx #$00
 	bne @p2_dx
@@ -450,9 +488,6 @@ player_throw_disc:
 	lda #$00
 	sta player_state + PLAYER_HOLDING_DISCOFF, x
 	sta disc_state + DISC_HELDOFF
-
-	; Record player as the last one to have thrown the disc
-	stx disc_state + DISC_LAST_PLAYEROFF
 
 	rts
 

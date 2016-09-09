@@ -32,9 +32,9 @@ sintab:
 	$(TOOL_CC) tools/sintab.c -o tools/sintab $(TOOL_LDF) 
 	
 trig: sintab
-	tools/sintab sin 0.0 6.2831853 512 16 math_sin_512_16 > $(TRIGFILE)
+	tools/sintab sin 0.0 6.2831853 128 16 math_sin_128_16 > $(TRIGFILE)
+	tools/sintab sin 0.0 6.2831853 512 16 math_sin_512_16 >> $(TRIGFILE)
 	tools/sintab sin 0.0 6.2831853 768 16 math_sin_768_16 >> $(TRIGFILE)
-	tools/sintab sin 0.0 6.2831853 1024 16 math_sin_1024_16 >> $(TRIGFILE)
 	tools/sintab sin 0.0 6.2831853 1536 16 math_sin_1536_16 >> $(TRIGFILE)
 
 mednafen: $(EXECUTABLE)

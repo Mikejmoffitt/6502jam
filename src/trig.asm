@@ -1,3 +1,22 @@
+math_sin_128_16:
+.byte $10
+	.word $0000
+	.word $0030
+	.word $005A
+	.word $0076
+	.word $0080
+	.word $0076
+	.word $005A
+	.word $0030
+	.word $0000
+	.word $FFD0
+	.word $FFA6
+	.word $FF8A
+	.word $FF80
+	.word $FF8A
+	.word $FFA6
+	.word $FFD0
+
 math_sin_512_16:
 .byte $10
 	.word $0000
@@ -35,25 +54,6 @@ math_sin_768_16:
 	.word $FD3B
 	.word $FDE1
 	.word $FEDB
-
-math_sin_1024_16:
-.byte $10
-	.word $0000
-	.word $0187
-	.word $02D4
-	.word $03B2
-	.word $0400
-	.word $03B2
-	.word $02D4
-	.word $0187
-	.word $0000
-	.word $FE79
-	.word $FD2C
-	.word $FC4E
-	.word $FC00
-	.word $FC4E
-	.word $FD2C
-	.word $FE79
 
 math_sin_1536_16:
 .byte $10
