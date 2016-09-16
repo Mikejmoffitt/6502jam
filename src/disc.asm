@@ -38,6 +38,7 @@ DISC_SPINNING_CYCLE_ADDROFF = $15 ; If null, disc is not spinning.
 DISC_SPINNING_CYCLE_DIROFF = $17 ; 0 = spinning right, 1 = spinning left
 DISC_SPINNING_CYCLE_WAIT_CNTOFF = $18
 DISC_SPINNING_CYCLE_WAIT_AMNTOFF = $19
+DISC_SPINNING_COLL_IMMUNITY = $1A ; If nonzero, collisions won't stop a spin
 
 .segment "BANKE"
 .include "trig.asm"
@@ -65,6 +66,12 @@ disc_spin_invert_phase:
 @no_idx_overflow:
 	rts
 
+; Called when a spin move is performed (as opposed to a spin throw)
+disc_set_coll_immunity:
+	lda #$01
+	sta disc_state + DISC_SPINNING_COLL_IMMUNITY
+	rts
+
 ; Clears out the disc spinning data.
 disc_stop_spinning:
 	ldy #$00
@@ -73,6 +80,7 @@ disc_stop_spinning:
 	sty disc_state + DISC_SPINNING_CYCLE_POSOFF
 	sty disc_state + DISC_SPINNING_CYCLE_ADDROFF
 	sty disc_state + DISC_SPINNING_CYCLE_ADDROFF+1
+	sty disc_state + DISC_SPINNING_COLL_IMMUNITY
 	rts
 
 ; Spin the disc.
@@ -216,8 +224,7 @@ disc_spin_proc:
 	; And Y position
 	sum16 disc_state+DISC_YOFF, temp3
 
-	; Did we just collide with a wall?
-	; Top
+	; Test for top collision.
 	lda playfield_top
 	clc
 	adc #(DISC_H/2)
@@ -228,18 +235,14 @@ disc_spin_proc:
 	neg16 disc_state+DISC_DYOFF		; Invert dy
 
 	; Put table index out of phase
-	lda disc_state + DISC_SPINNING_CYCLE_LENOFF
-
-	lsr a
-	clc
-	adc disc_state + DISC_SPINNING_CYCLE_POSOFF ; Pos += len/2
+	jsr disc_spin_invert_phase
 
 @do_not_reduce_pos:
 	sta disc_state + DISC_SPINNING_CYCLE_POSOFF
 
 	jmp @post_col
 
-	; Bottom
+	; Test for bottom collision.
 	lda disc_state + DISC_YOFF+1
 	clc
 	adc #(DISC_H/2)				; Offset by height of disc
@@ -251,6 +254,7 @@ disc_spin_proc:
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF
+	jsr disc_spin_invert_phase
 	; Fall-through to post_col
 
 @post_col:
