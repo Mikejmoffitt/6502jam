@@ -234,6 +234,13 @@ disc_spin_proc:
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF		; Invert dy
 
+	; terminate spinning if appropriate
+	lda disc_state + DISC_SPINNING_COLL_IMMUNITY
+	bne @no_stop_spin_1
+	jsr disc_stop_spinning
+	rts
+
+@no_stop_spin_1:
 	; Put table index out of phase
 	jsr disc_spin_invert_phase
 
@@ -254,6 +261,15 @@ disc_spin_proc:
 	sta disc_state + DISC_YOFF+1		; Clamp disc Y to top of playfield
 	stx disc_state + DISC_YOFF
 	neg16 disc_state+DISC_DYOFF
+
+	; terminate spinning if appropriate
+	lda disc_state + DISC_SPINNING_COLL_IMMUNITY
+	bne @no_stop_spin_2
+	jsr disc_stop_spinning
+	rts
+
+@no_stop_spin_2:
+	; Put table index out of phase
 	jsr disc_spin_invert_phase
 	; Fall-through to post_col
 
