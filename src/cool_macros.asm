@@ -33,8 +33,6 @@ OAM_BASE	= $200
 	sta PPUMASK			; Put back PPU rendering state to what it was before
 
 	lda ppuctrl_config
-	ora xscroll+1			; Bring in X scroll coarse bit
-	ora yscroll+1			; Y scroll coarse bit
 	sta PPUCTRL			; Re-enable NMI
 .endmacro
 

@@ -1,31 +1,37 @@
+; iNES Header
 .include "header.asm"
-.include "cool_macros.asm"
-.include "ram.asm"
-.include "resourcebanks.asm"
 
-PLAYFIELD_HEIGHT = $b0
-PLAYFIELD_Y      = $40
-PLAYFIELD_WIDTH  = $e8
-PLAYFIELD_X      = $0c
+.segment "ZEROPAGE"
+; Fast variables
 
-FENCE_SPR_Y = $CF
-
-.include "disc.asm"
-.include "player.asm"
-.include "utils.asm"
+.segment "RAM"
+; Variables
+ppumask_config:
+.res 1
+ppuctrl_config:
+.res 1
+vblank_flag:
+.res 1
 
 .segment "BANKF"
+.include "cool_macros.asm"
+; Main boot bank
 
-.include "tables.asm"
+; Routine for frame synchronization
+wait_nmi:
+	 lda vblank_flag
+	 bne wait_nmi			; Spin here until NMI lets us through
+	 lda #$01
+	 sta vblank_flag
+	 rts
 
 ; ============================
-;	  NMI ISR
+; NMI ISR
+; Run once per frame
 ; ============================
 nmi_vector:
 	pha				; Preseve A
 	
-	inc frame_counter		; Update frame counter
-
 	lda #$00
 	sta PPUCTRL			; Disable NMI
 	sta vblank_flag
@@ -43,41 +49,14 @@ nmi_vector:
 	rti
 
 ; ============================
-;	  IRQ ISR
+; IRQ ISR
+; Unused
 ; ============================
 irq_vector:
 	rti
 
 ; ============================
-;	 Main loop
-; ============================
-
-main_entry:
-	jsr spr_init
-	jsr wait_nmi
-	ppu_disable
-	jsr playfield_init
-
-	bank_load #$0E
-	jsr disc_init
-	jsr players_init
-
-	lda #$00
-	sta xscroll
-	sta xscroll+1
-	sta yscroll+1
-	sta yscroll
-
-	spr_dma
-	ppu_enable
-
-	jsr game_loop
-
-; If the game loop exits for any reason, we'll fall through back into the 
-; reset vector for a relatively harmless experience
-
-; ============================
-;	Entry Point
+; Entry vector
 ; ============================
 
 reset_vector:
@@ -120,14 +99,6 @@ reset_vector:
 	inx
 	bne @clrmem
 
-; Make controller comparison table
-	lda #$80
-	ldx #$00
-@build_controller_table:
-	sta button_table, x
-	inx
-	lsr
-	bne @build_controller_table
 ; One more vblank
 @waitvbl2:
 	lda #$80
@@ -135,16 +106,15 @@ reset_vector:
 	bne @waitvbl2
 
 ; PPU configuration for actual use
-	ldx #%10010000			; Nominal PPUCTRL settings
-					; NMI enable
-					; Slave mode
-					; 8x8 sprites
-					; BG at $1000
-					; SPR at $0000
-					; VRAM auto-inc 1
+	ldx #%10010000		; Nominal PPUCTRL settings
+				; NMI enable
+				; Slave mode
+				; 8x8 sprites
+				; BG at $1000
+				; SPR at $0000
+				; VRAM auto-inc 1
 	stx ppuctrl_config
 	stx PPUCTRL
-
 
 	ldx #%00011110
 	stx ppumask_config
@@ -154,111 +124,10 @@ reset_vector:
 
 	jmp main_entry			; GOTO main loop
 
-; ============================
-;   Initialize the playfield
-; ============================
-playfield_init:
+main_entry:
 
-	ppu_disable
+	jmp main_entry ; loop forever
 
-	bank_load #$00
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-
-	; Playfield #1's CHR data
-	ppu_write_32kbit gfx1 + $1000, #$10
-
-	bank_load #$01
-	; Playfield #1's mappings
-	ppu_write_8kbit field1_table, #$20
-	; Playfield #1's palettes
-	ppu_load_bg_palette playfield_palettes
-
-
-; Store playfield dimensions
-	lda #PLAYFIELD_X
-	sta playfield_left
-	lda #(PLAYFIELD_X + PLAYFIELD_WIDTH)
-	sta playfield_right
-	lda #PLAYFIELD_Y
-	sta playfield_top
-	lda #(PLAYFIELD_Y + PLAYFIELD_HEIGHT)
-	sta playfield_bottom
-
-	lda playfield_left
-	lsr a
-	sta temp
-	lda playfield_right
-	lsr a
-	clc
-	adc temp
-	sta playfield_center
-
-	; Player sprite test graphics
-	bank_load #$00
-	; Sprites
-	ppu_write_32kbit gfx1, #$00
-
-	rts
-
-
-; ========================== 
-;         Game Loop
-; ==========================
-game_loop:
-
-
-@toploop:
-; Logic updates ------------------------
-; Update controller state captures
-	jsr read_joy_safe
-
-; Disc and player logic are in bank E
-	bank_load #$0E
-
-; Establish frame tick preconditions
-	jsr players_handle_input
-
-; Run a tick of physics
-	jsr disc_move
-	jsr players_move
-	jsr players_check_disc
-
-; Render from new result
-	jsr disc_draw
-	jsr players_draw
-	jsr fence_mask_draw
-
-; Graphics updates ---------------------
-	jsr wait_nmi
-	ppu_disable
-
-	spr_dma
-	ppu_load_scroll xscroll, yscroll
-
-	ppu_enable
-	jmp @toploop
-
-	rts
-
-
-; This can be "written to" to avoid bus conflicts when loading banks
-bank_load_table:
-	.byte 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-	
 .segment "VECTORS"
 
 	.addr	nmi_vector
