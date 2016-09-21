@@ -26,9 +26,6 @@ player_run_hold_counter:
 ; Have we reached the autothrow threshhold?
 	cmp #PLAYER_AUTOTHROW_DELAY
 
-	; TODO: Remove debug disable line here:
-	rts
-
 	beq :+
 ; If not, get out of here
 	rts
@@ -332,14 +329,20 @@ player_do_normal_throw:
 	lda (addr_ptr), y
 	sta disc_state + DISC_DYOFF
 
-	stx temp4
-
 	; TODO: Load scale coefficient based on how long the player has held
 	; the disc before pressing the A button.
 
-	; Scale X
-	lda #32
+	; Subtract hold counter from (autothrow delay + strength padding)
+	lda #(PLAYER_AUTOTHROW_DELAY + PLAYER_THROW_STR_PADDING)
+	sec
+	sbc player_state + PLAYER_HOLD_CNTOFF, x
+	sta temp8
 	sta temp7
+
+	; Back up X; multiply mangles it.
+	stx temp4
+
+	; Scale dX (coefficient is in temp7)
 	lda disc_state + DISC_DXOFF
 	jsr mul_func
 
@@ -347,8 +350,8 @@ player_do_normal_throw:
 	lda temp5
 	sta disc_state + DISC_DXOFF
 
-	; Scale Y
-	lda #32
+	; Scale dY
+	lda temp8 ; Coefficient from the hold counter
 	sta temp7
 	lda disc_state + DISC_DYOFF
 	jsr mul_func
@@ -357,6 +360,7 @@ player_do_normal_throw:
 	lda temp5
 	sta disc_state + DISC_DYOFF
 
+	; Restore preserved X
 	ldx temp4
 
 ; Is the player holding up?

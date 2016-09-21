@@ -1,13 +1,8 @@
 SICK TASK MANAGEMENT
 ====================
 
-* D-Pad rotation sense
+* Throw speed scaling
 * Angle influence on disc path (after angle throw)
-	- Use arctan to get angle disc currently travels at 
-	- Use distance formula to get speed disc currently travels at 
-	- Add / sub from angle
-	- Use cos and sin to get coefficients for new dx / dy
-	- Multiply coefficients by stored disc speed
 * Disc deflection / flip up
 * Super throws (when disc comes back down)
 * Scoring detection
