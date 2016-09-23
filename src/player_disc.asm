@@ -551,11 +551,13 @@ player_detect_rotation:
 	jmp @post_detect
 
 @new_state:
+
 	; Load previous state, to determine valid new states
 	lda player_state + PLAYER_ROTATE_STATEOFF, x
 	; Implicit: cmp DPAD_NONE ; DPAD_NONE is zero
 	bne @chk_directions
 
+@nonzero_cooldown:
 	; No prior state, so capture the new one
 	lda temp
 	sta player_state + PLAYER_ROTATE_STATEOFF, x
@@ -581,11 +583,17 @@ player_detect_rotation:
 @post_detect:
 	; No new direction, just decrement the cooldown if we have it
 	lda player_state + PLAYER_ROTATE_COOLDOWNOFF, x
-	beq @no_cooldown_dec
+
+	beq @post_cooldown_dec
+
 	sec
 	sbc #$01
 	sta player_state + PLAYER_ROTATE_COOLDOWNOFF, x
-@no_cooldown_dec:
+	bne @post_cooldown_dec
+
+	jsr player_rotate_mark_none
+
+@post_cooldown_dec:
 
 	rts
 
