@@ -1,33 +1,54 @@
 ; iNES Header
 .include "header.asm"
 
+; =============================
+; Zero-page and main RAM
+; Variables, flags, etc.
+; =============================
 .segment "ZEROPAGE"
 ; Fast variables
+temp:		.res 1
+temp2:		.res 1
+temp3:		.res 1
+temp4:		.res 1
+temp5:		.res 1
+temp6:		.res 1
+temp7:		.res 1
+temp8:		.res 1
+pad_1:		.res 1
+pad_1_prev:	.res 1
+pad_2:		.res 1
+pad_2_prev:	.res 1
 
 .segment "RAM"
-; Variables
-ppumask_config:
-.res 1
-ppuctrl_config:
-.res 1
-vblank_flag:
-.res 1
+; Flags for PPU control
+ppumask_config:	.res 1
+ppuctrl_config:	.res 1
+vblank_flag:	.res 1
+xscroll:	.res 2
+yscroll:	.res 2
 
-.segment "BANKF"
+; Some useful macros
 .include "cool_macros.asm"
-; Main boot bank
 
-; Routine for frame synchronization
-wait_nmi:
-	 lda vblank_flag
-	 bne wait_nmi			; Spin here until NMI lets us through
-	 lda #$01
-	 sta vblank_flag
-	 rts
+; ============================
+; PRG bank F
+;
+; Bank F is hardwired to $C000 - $FFFF, and is where the boot code resides.
+; Subsequently all code in Bank F is accessible when any bank is active. Common
+; utility code should go here.
+; ============================
+.segment "BANKF"
+.include "utils.asm"
 
 ; ============================
 ; NMI ISR
-; Run once per frame
+; This is run once per frame - it will allow any function spinning on the
+; vblank_flag variable to proceed.
+;
+; For frame synchronization, call wait_nmi:
+;
+;	jsr wait_nmi
 ; ============================
 nmi_vector:
 	pha				; Preseve A
@@ -50,7 +71,8 @@ nmi_vector:
 
 ; ============================
 ; IRQ ISR
-; Unused
+; Unused; can be wired to cartridge for special hardware. The UNROM mapper does
+; not use the IRQ pin for anything like scanline interrupts or timers, etc.
 ; ============================
 irq_vector:
 	rti
@@ -60,11 +82,12 @@ irq_vector:
 ; ============================
 
 reset_vector:
-; Basic 6502 init
+; Basic 6502 init, straight outta NESDev
 	sei				; ignore IRQs
 	cld				; No decimal mode, it isn't supported
-	ldx #$40
+	ldx #%00000100
 	stx $4017			; Disable APU frame IRQ
+
 	ldx #$ff
 	txs				; Set up stack
 
@@ -74,10 +97,8 @@ reset_vector:
 	stx PPUMASK			; Disable rendering
 	stx DMCFREQ			; Disable DMC IRQs
 
-; Configure UOROM
-
-	lda #$00
-	sta $8000
+; Set an upper bank
+	bank_load #$00
 
 ; Wait for first vblank
 @waitvbl1:
@@ -106,13 +127,14 @@ reset_vector:
 	bne @waitvbl2
 
 ; PPU configuration for actual use
-	ldx #%10010000		; Nominal PPUCTRL settings
+	ldx #%10001000		; Nominal PPUCTRL settings:
 				; NMI enable
-				; Slave mode
+				; Slave mode (don't change this!)
 				; 8x8 sprites
-				; BG at $1000
-				; SPR at $0000
+				; BG at $0000
+				; SPR at $1000
 				; VRAM auto-inc 1
+				; Nametable at $2000
 	stx ppuctrl_config
 	stx PPUCTRL
 
@@ -122,11 +144,72 @@ reset_vector:
 
 	ppu_enable
 
-	jmp main_entry			; GOTO main loop
+	jmp main_entry ; GOTO main loop
 
+; =============================================================================
+; ====                                                                     ====
+; ====                            Program Begin                            ====
+; ====                                                                     ====
+; =============================================================================
 main_entry:
+	; Disable PPU before we write to VRAM
+	ppu_disable
 
-	jmp main_entry ; loop forever
+	; Clear sprites
+	jsr spr_init
+
+	; Put scroll at 0, 0
+	bit PPUSTATUS
+	lda #$00
+	sta PPUSCROLL ; X scroll
+	sta PPUSCROLL ; Y scroll
+
+	; Load in a palette
+	ppu_load_bg_palette sample_palette_data
+	
+	; Load in CHR tiles to VRAM for BG
+	; Remember, BG data starts at $0000 - we must specify the upper byte of
+	; the destination address ($00).
+	ppu_write_32kbit sample_chr_data, #$00
+
+	; and for sprites, which start at $1000.
+	ppu_write_32kbit sample_chr_data + $1000, #$10
+
+	; Finally, bring in a nametable so the background will draw something.
+	; The first nametable begins at $2000, so we specify $20(00).
+	ppu_write_8kbit sample_nametable_data, #$20
+
+	; Duplicate the nametable into the other screen as well.
+	ppu_write_8kbit sample_nametable_data, #$24
+
+	; Bring the PPU back up.
+	jsr wait_nmi
+	ppu_enable
+
+main_top_loop:
+
+	; Run game logic here
+
+	; End of game logic frame; wait for NMI (vblank) to begin
+	jsr wait_nmi
+
+	; Commit VRAM updates while PPU is disabled in vblank
+	;ppu_disable
+
+	; Re-enable PPU for the start of a new frame
+	;ppu_enable
+	jmp main_top_loop; loop forever
+
+; Sample graphics
+sample_palette_data:
+	.byte	$0F, $01, $23, $30
+	.byte	$0F, $01, $23, $30
+	.byte	$0F, $01, $23, $30
+	.byte	$0F, $01, $23, $30
+sample_chr_data:
+	.incbin "resources/chr.chr"
+sample_nametable_data:
+	.incbin "resources/nametable.nam"
 
 .segment "VECTORS"
 

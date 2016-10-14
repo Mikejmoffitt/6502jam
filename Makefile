@@ -1,15 +1,14 @@
-TOOL_CC := clang
-TOOL_LDF := -lm
-AS := ca65
-LD := ld65
+TOOLSDIR := tools/cc65
+AS := $(TOOLSDIR)/ca65
+LD := $(TOOLSDIR)/ld65
 ASFLAGS := -g 
-LDFLAGS := -Ln labels.txt
 SRCDIR := src
-CONFIGNAME := config.cfg
+CONFIGNAME := ldscripts/nes.ld
 OBJNAME := main.o
 MAPNAME := map.txt
+LABELSNAME := labels.txt
 LISTNAME := listing.txt
-TRIGFILE := src/trig.asm
+LDFLAGS := -Ln $(LABELSNAME)
 
 TOPLEVEL := main.asm
 
@@ -22,7 +21,7 @@ build: $(EXECUTABLE)
 all: $(EXECUTABLE)
 
 clean:
-	rm -f main.nes main.o
+	rm -f main.nes main.o $(LISTNAME) $(LABELSNAME) $(MAPNAME)
 
 $(EXECUTABLE):
 	$(AS) $(SRCDIR)/$(TOPLEVEL) $(ASFLAGS) -I $(SRCDIR) -l $(LISTNAME) -o $(OBJNAME)

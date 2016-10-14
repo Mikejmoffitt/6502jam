@@ -19,7 +19,7 @@ BUTTON_DOWN		= %00000100
 BUTTON_LEFT		= %00000010
 BUTTON_RIGHT		= %00000001
 
-OAM_BASE	= $200
+OAM_BASE		= $200
 
 ; Turn off rendering
 .macro ppu_disable
